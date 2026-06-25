@@ -94,7 +94,24 @@
 
   <!-- step 2: workspace -->
   <div class="card" id="workCard" style="display:none">
-    <h2>第二步：選案件、帶資料</h2>
+    <h2>第二步：選文件、選案件、帶資料</h2>
+    <div class="grid2" style="margin-bottom:6px">
+      <div>
+        <label>文件類型</label>
+        <select id="docType">
+          <option value="claim">理賠申請書</option>
+          <option value="auth" disabled>授權書（尚未設定）</option>
+          <option value="change" disabled>契約變更書（尚未設定）</option>
+        </select>
+      </div>
+      <div>
+        <label>保險公司</label>
+        <select id="insurer">
+          <option value="taiwanlife">台灣人壽 ✓ 已設定</option>
+          <option value="" disabled>其他公司（傳空白 PDF 給小阿姨即可加入）</option>
+        </select>
+      </div>
+    </div>
     <div class="grid2">
       <div>
         <label>選擇案件</label>
@@ -142,16 +159,16 @@ const FORM='taiwanlife';
 const POS_KEY='bhw_print_pos_'+FORM;
 const FONT_KEY='bhw_print_font_'+FORM;
 const FIELDS=[
-  {id:'name',label:'姓名',def:{nx:0.134,ny:0.375}},
-  {id:'idno',label:'身分證',def:{nx:0.286,ny:0.380}},
-  {id:'birth',label:'出生日期',def:{nx:0.588,ny:0.380}},
-  {id:'phone',label:'行動電話',def:{nx:0.749,ny:0.380}},
-  {id:'holder',label:'戶名',def:{nx:0.138,ny:0.430}},
-  {id:'holderId',label:'受款人身分證',def:{nx:0.294,ny:0.449}},
-  {id:'bankName',label:'金融機構',def:{nx:0.521,ny:0.449}},
-  {id:'branch',label:'分行',def:{nx:0.749,ny:0.449}},
-  {id:'acct',label:'帳號',def:{nx:0.084,ny:0.469}},
-  {id:'applyDate',label:'申請日期',def:{nx:0.42,ny:0.942},offByDefault:true},
+  {id:'name',label:'姓名',def:{nx:0.126,ny:0.359}},
+  {id:'idno',label:'身分證',def:{nx:0.361,ny:0.359}},
+  {id:'birth',label:'出生日期',def:{nx:0.598,ny:0.359}},
+  {id:'phone',label:'行動電話',def:{nx:0.823,ny:0.359}},
+  {id:'holder',label:'戶名',def:{nx:0.081,ny:0.445}},
+  {id:'holderId',label:'受款人身分證',def:{nx:0.282,ny:0.445}},
+  {id:'bankName',label:'金融機構',def:{nx:0.519,ny:0.445}},
+  {id:'branch',label:'分行',def:{nx:0.746,ny:0.445}},
+  {id:'acct',label:'帳號',def:{nx:0.081,ny:0.463},offByDefault:true},
+  {id:'applyDate',label:'申請日期',def:{nx:0.445,ny:0.938},offByDefault:true},
 ];
 
 let pdfBytes=null;       // ArrayBuffer of template

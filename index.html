@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保險白話文 · 客戶管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --teal:#245A5E; --teal-deep:#19505A; --gold:#C9A95F; --cream:#FBF1D8;
+    --bg:#FFF8F0; --card:#ffffff; --ink:#232323; --muted:#7a7066;
+    --line:#e7ddcb; --danger:#C8464B; --ok:#3D7A5A;
+    --shadow:0 1px 3px rgba(36,90,94,.06),0 6px 24px rgba(36,90,94,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;font-size:15px;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;}
+  a{color:var(--teal);}
+  button{font-family:inherit;cursor:pointer;}
+
+  header{background:linear-gradient(135deg,var(--teal),var(--teal-deep));
+    color:#fff;padding:18px 22px;display:flex;align-items:center;gap:14px;}
+  .badge{width:44px;height:44px;border-radius:50%;background:var(--cream);
+    border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;}
+  header .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:19px;letter-spacing:1px;}
+  header .s{font-size:12px;opacity:.85;letter-spacing:.5px;}
+  header .spacer{flex:1;}
+  header .count{font-size:13px;background:rgba(255,255,255,.15);padding:5px 13px;border-radius:20px;}
+
+  main{max-width:980px;margin:0 auto;padding:22px 16px 80px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .card h2{font-size:18px;color:var(--teal);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .card .desc{color:var(--muted);font-size:13px;margin-bottom:16px;}
+
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;font-family:inherit;font-size:14.5px;background:#fffdf8;color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(36,90,94,.1);}
+  textarea{resize:vertical;min-height:80px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.row{grid-template-columns:1fr;}}
+
+  .btn{background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:10px;
+    font-weight:500;font-size:14.5px;}
+  .btn:hover{background:var(--teal-deep);}
+  .btn.gold{background:var(--gold);color:#3a2f15;}
+  .btn.gold:hover{filter:brightness(.95);}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn.ghost:hover{background:#f5efe2;}
+  .btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+  .btn.danger:hover{background:#fdf0f0;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .toolbar input{max-width:240px;}
+  .toolbar .spacer{flex:1;}
+  .client-list{display:grid;gap:10px;}
+  .client{background:#fffdf8;border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+    display:flex;align-items:flex-start;gap:12px;}
+  .client .av{width:38px;height:38px;border-radius:50%;background:var(--cream);border:1px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--teal);flex-shrink:0;}
+  .client .info{flex:1;min-width:0;}
+  .client .nm{font-weight:700;font-size:15.5px;}
+  .client .meta{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .client .actions{display:flex;gap:6px;flex-shrink:0;}
+  .client .icon-btn{border:none;background:#f1ece0;width:32px;height:32px;border-radius:8px;font-size:14px;}
+  .client .icon-btn:hover{background:#e6dcc7;}
+  .tag{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:20px;margin-right:5px;
+    background:var(--cream);color:var(--teal-deep);border:1px solid var(--gold);}
+  .tag.warn{background:#fdeede;color:#a05a1a;border-color:#e8c089;}
+  .tag.ok{background:#e6f1ea;color:var(--ok);border-color:#a9cdb8;}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px;}
+  .empty .big{font-size:34px;margin-bottom:8px;}
+  .due-soon{color:var(--danger);font-weight:500;}
+
+  .overlay{position:fixed;inset:0;background:rgba(25,40,42,.4);display:none;
+    align-items:flex-start;justify-content:center;padding:30px 14px;z-index:50;overflow:auto;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:18px;max-width:560px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .modal h2{color:var(--teal);font-size:18px;margin-bottom:14px;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal-deep);
+    color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;z-index:80;opacity:0;
+    transition:opacity .3s, transform .3s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .privacy{font-size:12.5px;color:var(--muted);line-height:1.8;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">💡</div>
+  <div>
+    <div class="t">保險白話文 · 客戶管理</div>
+    <div class="s">陪你慢富的小阿姨 · 私人工具</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="count" id="count">0 位客戶</div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>👤 客戶資料</h2>
+    <div class="desc">所有資料只存在你這台裝置的瀏覽器，不會上傳任何雲端。建議定期匯出 Excel 備份。</div>
+    <div class="toolbar">
+      <input id="search" placeholder="🔍 搜尋姓名 / 電話 / 商品">
+      <select id="filterStatus" style="max-width:150px">
+        <option value="">全部狀態</option>
+        <option>潛在客戶</option><option>洽談中</option><option>已成交</option>
+        <option>續保中</option><option>暫不需要</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="openClient()">＋ 新增客戶</button>
+      <button class="btn gold" onclick="exportExcel()">📊 匯出 Excel</button>
+      <button class="btn ghost" onclick="importExcel()">📥 匯入 Excel</button>
+      <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="handleImport(event)">
+    </div>
+    <div class="client-list" id="clientList"></div>
+  </div>
+
+  <div class="card">
+    <h2>🗂️ 資料備份</h2>
+    <div class="desc">客戶資料存在瀏覽器，換裝置或清快取會不見。建議定期備份。</div>
+    <div class="btn-row">
+      <button class="btn gold" onclick="exportExcel()">📊 匯出全部（Excel）</button>
+      <button class="btn ghost" onclick="exportJSON()">💾 匯出 JSON 備份</button>
+      <button class="btn ghost" onclick="importJSON()">📥 還原 JSON 備份</button>
+      <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="handleJSON(event)">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔒 隱私說明</h2>
+    <div class="privacy">
+      · 你輸入的所有客戶資料只在這台裝置的瀏覽器內儲存與運算。<br>
+      · 系統不會主動把任何可識別個資上傳到任何伺服器。<br>
+      · 本工具僅供你個人作業便利使用。
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">新增客戶</h2>
+    <input type="hidden" id="cId">
+    <div class="row">
+      <div><label>姓名 *</label><input id="cName"></div>
+      <div><label>手機</label><input id="cPhone"></div>
+    </div>
+    <div class="row">
+      <div><label>Email</label><input id="cEmail"></div>
+      <div><label>身分證 / 統編</label><input id="cIdno"></div>
+    </div>
+    <label>地址</label><input id="cAddr">
+    <div class="row">
+      <div><label>出生日期</label><input id="cBirth" type="date"></div>
+      <div><label>進度狀態</label>
+        <select id="cStatus">
+          <option>潛在客戶</option><option>洽談中</option><option>已成交</option>
+          <option>續保中</option><option>暫不需要</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>關注 / 規劃方向</label><input id="cInterest" placeholder="例如：新生兒、醫療險"></div>
+      <div><label>下次回訪日</label><input id="cFollow" type="date"></div>
+    </div>
+    <label>備註</label><textarea id="cNote"></textarea>
+    <div class="btn-row">
+      <button class="btn" onclick="saveClient()">儲存</button>
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn danger" id="delBtn" onclick="deleteClient()" style="margin-left:auto">刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_CLIENTS='bhw_clients';
+let clients = load(LS_CLIENTS, []);
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function saveClients(){localStorage.setItem(LS_CLIENTS,JSON.stringify(clients));}
+
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+function daysUntil(d){if(!d)return null;const diff=(new Date(d)-new Date())/86400000;return Math.ceil(diff);}
+function statusTag(s){
+  if(s==='已成交'||s==='續保中')return `<span class="tag ok">${s}</span>`;
+  if(s==='洽談中')return `<span class="tag warn">${s}</span>`;
+  return `<span class="tag">${s||'潛在客戶'}</span>`;
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+function renderClients(){
+  document.getElementById('count').textContent=clients.length+' 位客戶';
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const fs=document.getElementById('filterStatus').value;
+  const list=document.getElementById('clientList');
+  let arr=clients.filter(c=>{
+    const hit=!q||[c.name,c.phone,c.interest,c.email].join(' ').toLowerCase().includes(q);
+    const st=!fs||c.status===fs;return hit&&st;
+  });
+  arr.sort((a,b)=>{
+    const da=daysUntil(a.follow), db=daysUntil(b.follow);
+    if(da===null&&db===null)return 0; if(da===null)return 1; if(db===null)return -1; return da-db;
+  });
+  if(!clients.length){
+    list.innerHTML=`<div class="empty"><div class="big">🗂️</div>還沒有客戶資料。<br>點上方「＋ 新增客戶」開始建立。</div>`;return;
+  }
+  if(!arr.length){list.innerHTML=`<div class="empty">找不到符合的客戶。</div>`;return;}
+  list.innerHTML=arr.map(c=>{
+    const d=daysUntil(c.follow);
+    let follow='';
+    if(d!==null){
+      if(d<0)follow=`<span class="due-soon">⚠ 回訪已逾期 ${-d} 天</span>`;
+      else if(d<=7)follow=`<span class="due-soon">🔔 ${d} 天內回訪</span>`;
+      else follow=`📅 ${c.follow} 回訪`;
+    }
+    return `<div class="client">
+      <div class="av">${esc((c.name||'?').slice(0,1))}</div>
+      <div class="info">
+        <div class="nm">${esc(c.name)} ${statusTag(c.status)}</div>
+        <div class="meta">${c.phone?'📱 '+esc(c.phone)+' · ':''}${c.interest?'🎯 '+esc(c.interest)+' · ':''}${follow}</div>
+        ${c.note?`<div class="meta" style="margin-top:4px">📝 ${esc(c.note)}</div>`:''}
+      </div>
+      <div class="actions">
+        <button class="icon-btn" onclick="openClient('${c.id}')" title="編輯">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('search').oninput=renderClients;
+document.getElementById('filterStatus').onchange=renderClients;
+
+function openClient(id){
+  const c=id?clients.find(x=>x.id===id):null;
+  document.getElementById('modalTitle').textContent=c?'編輯客戶':'新增客戶';
+  document.getElementById('cId').value=c?c.id:'';
+  ['Name','Phone','Email','Idno','Addr','Birth','Interest','Follow','Note'].forEach(f=>{
+    document.getElementById('c'+f).value=c?(c[f.toLowerCase()]||''):'';
+  });
+  document.getElementById('cStatus').value=c?(c.status||'潛在客戶'):'潛在客戶';
+  document.getElementById('delBtn').style.display=c?'block':'none';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function val(id){return document.getElementById(id).value.trim();}
+function saveClient(){
+  const name=val('cName');
+  if(!name){toast('請至少填寫姓名');return;}
+  const id=val('cId');
+  const obj={
+    id:id||('c'+Date.now()),
+    name, phone:val('cPhone'), email:val('cEmail'), idno:val('cIdno'),
+    addr:val('cAddr'), birth:val('cBirth'), status:val('cStatus'),
+    interest:val('cInterest'), follow:val('cFollow'), note:val('cNote')
+  };
+  if(id){const i=clients.findIndex(x=>x.id===id);clients[i]=obj;}
+  else clients.unshift(obj);
+  saveClients();renderClients();closeModal();toast('已儲存');
+}
+function deleteClient(){
+  const id=val('cId');if(!id)return;
+  if(!confirm('確定刪除這位客戶？此動作無法復原。'))return;
+  clients=clients.filter(x=>x.id!==id);saveClients();renderClients();closeModal();toast('已刪除');
+}
+
+const COLS=[['name','姓名'],['phone','手機'],['email','Email'],['idno','身分證/統編'],
+  ['addr','地址'],['birth','出生日期'],['status','進度狀態'],['interest','關注/規劃方向'],
+  ['follow','下次回訪日'],['note','備註']];
+function exportExcel(){
+  if(!clients.length){toast('目前沒有資料可匯出');return;}
+  const rows=clients.map(c=>{const o={};COLS.forEach(([k,t])=>o[t]=c[k]||'');return o;});
+  const ws=XLSX.utils.json_to_sheet(rows,{header:COLS.map(c=>c[1])});
+  ws['!cols']=COLS.map(()=>({wch:16}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'客戶資料');
+  XLSX.writeFile(wb,'客戶資料_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('已匯出 Excel');
+}
+function importExcel(){document.getElementById('importFile').click();}
+function handleImport(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws);
+      const rev={}; COLS.forEach(([k,t])=>rev[t]=k);
+      let n=0;
+      rows.forEach(row=>{
+        const o={id:'c'+Date.now()+Math.random().toString(36).slice(2,6)};
+        Object.keys(row).forEach(t=>{if(rev[t])o[rev[t]]=String(row[t]);});
+        if(o.name){clients.unshift(o);n++;}
+      });
+      saveClients();renderClients();toast(`已匯入 ${n} 筆`);
+    }catch(err){toast('匯入失敗，請確認檔案格式');}
+  };
+  r.readAsArrayBuffer(f); e.target.value='';
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(clients,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='客戶備份_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('已匯出 JSON 備份');
+}
+function importJSON(){document.getElementById('jsonFile').click();}
+function handleJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{const data=JSON.parse(ev.target.result);
+      if(Array.isArray(data)){clients=data;saveClients();renderClients();toast('已還原備份');}
+      else toast('檔案格式不正確');
+    }catch(err){toast('還原失敗');}
+  };
+  r.readAsText(f); e.target.value='';
+}
+
+document.getElementById('overlay').onclick=e=>{if(e.target.id==='overlay')closeModal();};
+renderClients();
+</script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保險白話文 · 文件套印</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  :root{
+    --teal:#245A5E; --teal-deep:#19505A; --gold:#C9A95F; --cream:#FBF1D8;
+    --bg:#FFF8F0; --card:#ffffff; --ink:#232323; --muted:#7a7066;
+    --line:#e7ddcb; --danger:#C8464B; --ok:#3D7A5A;
+    --shadow:0 1px 3px rgba(36,90,94,.06),0 6px 24px rgba(36,90,94,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;font-size:15px;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;}
+  a{color:var(--teal);}
+  button{font-family:inherit;cursor:pointer;}
+  header{background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;padding:16px 22px;display:flex;align-items:center;gap:14px;}
+  .badge{width:42px;height:42px;border-radius:50%;background:var(--cream);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:21px;}
+  header .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:18px;letter-spacing:1px;}
+  header .s{font-size:12px;opacity:.85;}
+  header .spacer{flex:1;}
+  header a.back{color:#fff;font-size:13px;background:rgba(255,255,255,.15);padding:7px 14px;border-radius:20px;text-decoration:none;}
+  main{max-width:1040px;margin:0 auto;padding:20px 16px 80px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .card h2{font-size:17px;color:var(--teal);margin-bottom:4px;}
+  .desc{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px;}
+  select,input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14.5px;background:#fffdf8;color:var(--ink);}
+  .btn{background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:500;font-size:14.5px;}
+  .btn:hover{background:var(--teal-deep);}
+  .btn.gold{background:var(--gold);color:#3a2f15;}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn.ghost:hover{background:#f5efe2;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  /* upload zone */
+  .drop{border:2px dashed var(--gold);border-radius:14px;padding:34px 20px;text-align:center;background:#fffdf6;cursor:pointer;}
+  .drop:hover{background:#fdf7e8;}
+  .drop .big{font-size:36px;margin-bottom:8px;}
+
+  /* workspace */
+  .stage{position:relative;display:inline-block;border:1px solid var(--line);box-shadow:var(--shadow);background:#fff;max-width:100%;}
+  #pdfCanvas{display:block;max-width:100%;height:auto;}
+  .chip{position:absolute;transform:translate(0,0);background:transparent;border:1px solid transparent;
+    color:#101010;font-size:12px;padding:0 2px;border-radius:4px;cursor:grab;white-space:nowrap;user-select:none;line-height:1.2;}
+  .chip:hover{background:rgba(255,247,224,.75);border-color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  .chip.empty{background:rgba(255,255,255,.55);border:1px dashed var(--line);color:#bbb;}
+  .chip.empty:hover{border-color:var(--gold);}
+  .chip.off{display:none;}
+  .chip:active{cursor:grabbing;}
+  .toolbar-fields{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .ftog{display:flex;align-items:center;gap:5px;font-size:12.5px;border:1px solid var(--line);border-radius:20px;padding:5px 11px;background:#fffdf8;cursor:pointer;}
+  .ftog input{width:auto;}
+  .warn-box{font-size:12.5px;color:#a05a1a;background:#fdf6ea;border:1px solid #e8c089;border-radius:10px;padding:11px 13px;margin-top:12px;line-height:1.7;}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal-deep);color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;z-index:80;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .row-slider{display:flex;align-items:center;gap:10px;}
+  .row-slider input[type=range]{flex:1;}
+  .pill{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:20px;background:var(--cream);border:1px solid var(--gold);color:var(--teal-deep);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">📄</div>
+  <div>
+    <div class="t">文件套印</div>
+    <div class="s">台灣人壽 · 保險金申請書</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="back" href="index.html">← 回客戶管理</a>
+</header>
+
+<main>
+  <!-- step 1: template -->
+  <div class="card" id="uploadCard">
+    <h2>第一步：放入空白範本</h2>
+    <div class="desc" id="uploadDesc">上傳你手上的「台灣人壽 保險金申請書」空白 PDF（你公司／官網本來就有的那份）。檔案只會存在你這台裝置，不上雲端。上傳一次即可，之後會記住。</div>
+    <div class="drop" id="drop" onclick="document.getElementById('pdfFile').click()">
+      <div class="big">📂</div>
+      點這裡選擇空白 PDF，或把檔案拖進來
+    </div>
+    <input type="file" id="pdfFile" accept="application/pdf" style="display:none" onchange="onPickPdf(event)">
+  </div>
+
+  <!-- step 2: workspace -->
+  <div class="card" id="workCard" style="display:none">
+    <h2>第二步：選文件、選案件、帶資料</h2>
+    <div class="grid2" style="margin-bottom:6px">
+      <div>
+        <label>文件類型</label>
+        <select id="docType">
+          <option value="claim">理賠申請書</option>
+          <option value="auth" disabled>授權書（尚未設定）</option>
+          <option value="change" disabled>契約變更書（尚未設定）</option>
+        </select>
+      </div>
+      <div>
+        <label>保險公司</label>
+        <select id="insurer" onchange="onInsurerChange()">
+          <option value="taiwanlife">台灣人壽 ✓ 已設定</option>
+          <option value="fglife">遠雄人壽 ✓ 已設定</option>
+          <option value="" disabled>其他公司（傳空白 PDF 給小阿姨即可加入）</option>
+        </select>
+      </div>
+    </div>
+    <div class="hint" id="tplStatus" style="margin:8px 0 4px"></div>
+    <div class="grid2">
+      <div>
+        <label>選擇案件</label>
+        <select id="caseSel" onchange="onCaseChange()"></select>
+      </div>
+      <div>
+        <label>被保險人那格要帶誰</label>
+        <select id="personSel" onchange="refreshValues()"></select>
+      </div>
+    </div>
+    <label style="margin-top:12px">文字大小</label>
+    <div class="row-slider">
+      <input type="range" id="fontSize" min="7" max="16" step="0.5" value="10.5" oninput="onFontChange()">
+      <span class="pill" id="fontVal">10.5</span>
+    </div>
+
+    <div class="toolbar-fields" id="fieldToggles"></div>
+
+    <div class="warn-box">
+      🔧 第一次用請先「對位」：下方每個黃色標籤拖到表格對應的格子上，放開即自動記住。<br>
+      ⚠ 帳號／代號那種一格一字的方框，自動套印不一定能對齊每一格，那幾欄你可關掉、用手寫。勾選項目和簽名一律請你自己手勾、手簽。
+    </div>
+
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn gold" id="genBtn" onclick="generate()">套印並下載 PDF</button>
+      <button class="btn ghost" onclick="resetPositions()">重設位置</button>
+      <button class="btn ghost" onclick="changeTemplate()">更換範本</button>
+      <button class="btn ghost" onclick="clearTemplate()" style="color:var(--danger);border-color:var(--danger)">清除此家範本</button>
+    </div>
+    <div class="hint" id="status"></div>
+
+    <div style="margin-top:16px;overflow:auto">
+      <div class="stage" id="stage">
+        <canvas id="pdfCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const FORMS={
+  taiwanlife:{label:'台灣人壽', fields:[
+    {id:'name',label:'姓名',def:{nx:0.126,ny:0.359}},
+    {id:'idno',label:'身分證',def:{nx:0.361,ny:0.359}},
+    {id:'birthY',label:'出生年',def:{nx:0.598,ny:0.359}},
+    {id:'birthM',label:'出生月',def:{nx:0.659,ny:0.359}},
+    {id:'birthD',label:'出生日',def:{nx:0.701,ny:0.359}},
+    {id:'phone',label:'行動電話',def:{nx:0.823,ny:0.359}},
+    {id:'holder',label:'戶名',def:{nx:0.081,ny:0.445}},
+    {id:'holderId',label:'受款人身分證',def:{nx:0.282,ny:0.445}},
+    {id:'bankName',label:'金融機構',def:{nx:0.519,ny:0.445}},
+    {id:'branch',label:'分行',def:{nx:0.746,ny:0.445}},
+    {id:'acct',label:'帳號',def:{nx:0.081,ny:0.463},offByDefault:true},
+    {id:'applyDate',label:'申請日期',def:{nx:0.445,ny:0.938},offByDefault:true},
+  ]},
+  fglife:{label:'遠雄人壽', fields:[
+    {id:'name',label:'姓名',def:{nx:0.185,ny:0.099}},
+    {id:'idno',label:'身分證',def:{nx:0.588,ny:0.095}},
+    {id:'birthY',label:'出生年',def:{nx:0.588,ny:0.109}},
+    {id:'birthM',label:'出生月',def:{nx:0.747,ny:0.109}},
+    {id:'birthD',label:'出生日',def:{nx:0.857,ny:0.109}},
+    {id:'holder',label:'戶名',def:{nx:0.084,ny:0.397}},
+    {id:'bankName',label:'金融機構',def:{nx:0.257,ny:0.397}},
+    {id:'branch',label:'分行',def:{nx:0.430,ny:0.397}},
+    {id:'acct',label:'帳號',def:{nx:0.580,ny:0.397},offByDefault:true},
+    {id:'phone',label:'行動電話',def:{nx:0.126,ny:0.776}},
+    {id:'applyDate',label:'申請日期',def:{nx:0.235,ny:0.863},offByDefault:true},
+  ]},
+};
+
+let active='taiwanlife';
+function posKey(){return 'bhw_print_pos_'+active;}
+function fontKey(){return 'bhw_print_font_'+active;}
+let FIELDS=FORMS[active].fields;
+
+let pdfBytes=null;       // ArrayBuffer of template
+let pageViewport=null;   // pdf.js viewport (display)
+let positions=loadPositions();
+let fontSize=parseFloat(localStorage.getItem(fontKey()))||10.5;
+let cases=[];
+let curValues={};        // fieldId -> string
+
+function loadPositions(){
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(posKey()))||{};}catch(e){}
+  const out={};
+  FIELDS.forEach(f=>{
+    const s=saved[f.id]||{};
+    out[f.id]={nx:s.nx??f.def.nx, ny:s.ny??f.def.ny, on:s.on!==undefined?s.on:!f.offByDefault};
+  });
+  return out;
+}
+function savePositions(){localStorage.setItem(posKey(),JSON.stringify(positions));}
+
+let toastT;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+function setStatus(m){document.getElementById('status').textContent=m||'';}
+
+/* ---------- IndexedDB for template ---------- */
+function idb(mode,fn){
+  return new Promise((res,rej)=>{
+    const o=indexedDB.open('bhw_print',1);
+    o.onupgradeneeded=()=>{o.result.createObjectStore('files');};
+    o.onsuccess=()=>{const tx=o.result.transaction('files',mode);const st=tx.objectStore('files');fn(st,res,rej);tx.onerror=()=>rej(tx.error);};
+    o.onerror=()=>rej(o.error);
+  });
+}
+function idbSet(k,v){return idb('readwrite',(st,res)=>{st.put(v,k);res(true);});}
+function idbGet(k){return idb('readonly',(st,res)=>{const r=st.get(k);r.onsuccess=()=>res(r.result);});}
+function idbDel(k){return idb('readwrite',(st,res)=>{st.delete(k);res(true);});}
+
+/* ---------- template handling ---------- */
+async function onPickPdf(e){
+  const f=e.target.files[0];if(!f)return;
+  if(f.type!=='application/pdf'){toast('請選擇 PDF 檔');return;}
+  const buf=await f.arrayBuffer();
+  await idbSet(active, buf);
+  pdfBytes=buf;
+  await startWorkspace();
+  toast('範本已儲存');
+}
+async function changeTemplate(){
+  if(!confirm('要更換空白範本嗎？目前對位設定會保留。'))return;
+  document.getElementById('pdfFile').click();
+}
+async function clearTemplate(){
+  if(!confirm('清除「'+FORMS[active].label+'」目前存的空白範本？（對位設定會保留，下次重新上傳即可）'))return;
+  await idbDel(active);
+  pdfBytes=null;
+  showUpload();
+  setTpl();
+  toast('已清除，請重新上傳正確的'+FORMS[active].label+'空白 PDF');
+}
+function setTpl(){
+  const el=document.getElementById('tplStatus');
+  if(!el)return;
+  el.textContent=pdfBytes?('📄 目前載入：'+FORMS[active].label+' 範本'):('⚠ '+FORMS[active].label+' 尚未上傳範本');
+  el.style.color=pdfBytes?'var(--ok)':'var(--danger)';
+}
+async function tryLoadTemplate(){
+  const buf=await idbGet(active);
+  if(buf){pdfBytes=buf;await startWorkspace();return true;}
+  showUpload();
+  return false;
+}
+function showUpload(){
+  document.getElementById('uploadCard').style.display='block';
+  document.getElementById('workCard').style.display='block';
+  document.getElementById('stage').style.display='none';
+  setTpl();
+}
+async function onInsurerChange(){
+  active=document.getElementById('insurer').value||'taiwanlife';
+  FIELDS=FORMS[active].fields;
+  positions=loadPositions();
+  fontSize=parseFloat(localStorage.getItem(fontKey()))||10.5;
+  document.getElementById('uploadDesc').textContent='上傳你手上的「'+FORMS[active].label+' 保險金申請書」空白 PDF。';
+  pdfBytes=null;
+  const has=await tryLoadTemplate();
+  if(has){document.getElementById('uploadCard').style.display='none';}
+}
+
+/* ---------- workspace ---------- */
+async function startWorkspace(){
+  document.getElementById('uploadCard').style.display='none';
+  document.getElementById('workCard').style.display='block';
+  document.getElementById('stage').style.display='inline-block';
+  await renderPreview();
+  loadCases();
+  buildFieldToggles();
+  document.getElementById('fontSize').value=fontSize;
+  document.getElementById('fontVal').textContent=fontSize;
+  setTpl();
+  refreshValues();
+}
+
+async function renderPreview(){
+  const bytes=pdfBytes.slice(0); // pdf.js detaches buffer; keep original
+  const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  const page=await pdf.getPage(1);
+  const base=page.getViewport({scale:1});
+  const stage=document.getElementById('stage');
+  const targetW=Math.min(stage.parentElement.clientWidth-2, 720);
+  const scale=targetW/base.width;
+  pageViewport=page.getViewport({scale});
+  const canvas=document.getElementById('pdfCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=pageViewport.width; canvas.height=pageViewport.height;
+  await page.render({canvasContext:ctx, viewport:pageViewport}).promise;
+  stage.style.width=pageViewport.width+'px';
+  renderChips();
+}
+
+function loadCases(){
+  try{cases=JSON.parse(localStorage.getItem('bhw_clients'))||[];}catch(e){cases=[];}
+  const sel=document.getElementById('caseSel');
+  if(!cases.length){
+    sel.innerHTML='<option value="">（沒有案件，請先到客戶管理建立）</option>';return;
+  }
+  sel.innerHTML=cases.map((c,i)=>`<option value="${i}">${esc(c.ph?c.ph.name:'')||'（無姓名）'}</option>`).join('');
+  onCaseChange();
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+function onCaseChange(){
+  const c=curCase();
+  const psel=document.getElementById('personSel');
+  if(!c){psel.innerHTML='';refreshValues();return;}
+  let opts=[`<option value="ph">要保人：${esc(c.ph.name)}</option>`];
+  (c.insureds||[]).forEach((ins,i)=>{
+    if(ins.name)opts.push(`<option value="ins${i}">被保人：${esc(ins.name)}${ins.rel?'（'+esc(ins.rel)+'）':''}</option>`);
+  });
+  psel.innerHTML=opts.join('');
+  refreshValues();
+}
+function curCase(){const i=document.getElementById('caseSel').value;return i===''?null:cases[i];}
+
+function rocDate(){
+  const d=new Date();
+  return (d.getFullYear()-1911)+'　　'+(d.getMonth()+1)+'　　'+d.getDate();
+}
+function parseBirth(str){
+  const parts=String(str||'').split(/[^0-9]+/).filter(Boolean);
+  let y=parts[0]||'', m=parts[1]||'', d=parts[2]||'';
+  // 民國年（2-3 碼且 <= 200）轉西元，方便對到西元年格；若你的表是民國格可自行調整
+  return {y, m, d};
+}
+function refreshValues(){
+  const c=curCase();
+  curValues={};
+  if(c){
+    const psel=document.getElementById('personSel').value||'ph';
+    let person=c.ph;
+    if(psel.startsWith('ins')){const idx=parseInt(psel.slice(3));person=(c.insureds||[])[idx]||c.ph;}
+    curValues.name=person.name||'';
+    curValues.idno=person.idno||'';
+    const bd=parseBirth(person.birth||'');
+    curValues.birthY=bd.y; curValues.birthM=bd.m; curValues.birthD=bd.d;
+    curValues.phone=person.phone||person.tel||'';
+    const bk=c.bank||{};
+    curValues.holder=bk.holder||'';
+    curValues.holderId=bk.holderId||'';
+    curValues.bankName=bk.bankName||'';
+    curValues.branch=bk.branch||'';
+    curValues.acct=bk.acct||'';
+    curValues.applyDate=rocDate();
+  }
+  renderChips();
+}
+
+function renderChips(){
+  if(!pageViewport)return;
+  const stage=document.getElementById('stage');
+  stage.querySelectorAll('.chip').forEach(n=>n.remove());
+  FIELDS.forEach(f=>{
+    const p=positions[f.id];
+    const v=(curValues[f.id]||'').trim();
+    const chip=document.createElement('div');
+    chip.className='chip'+(v?'':' empty')+(p.on?'':' off');
+    chip.dataset.id=f.id;
+    chip.textContent=v||('（'+f.label+'）');
+    chip.style.left=(p.nx*pageViewport.width)+'px';
+    chip.style.top=(p.ny*pageViewport.height)+'px';
+    chip.style.fontSize=(fontSize*(pageViewport.width/595.3))+'px';
+    makeDraggable(chip,f.id);
+    stage.appendChild(chip);
+  });
+}
+
+function makeDraggable(chip,id){
+  let sx,sy,ox,oy,dragging=false;
+  chip.addEventListener('pointerdown',e=>{
+    dragging=true;chip.setPointerCapture(e.pointerId);
+    sx=e.clientX;sy=e.clientY;ox=parseFloat(chip.style.left);oy=parseFloat(chip.style.top);
+    e.preventDefault();
+  });
+  chip.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    let nl=ox+(e.clientX-sx), nt=oy+(e.clientY-sy);
+    nl=Math.max(0,Math.min(pageViewport.width, nl));
+    nt=Math.max(0,Math.min(pageViewport.height, nt));
+    chip.style.left=nl+'px';chip.style.top=nt+'px';
+  });
+  chip.addEventListener('pointerup',e=>{
+    if(!dragging)return;dragging=false;
+    positions[id].nx=parseFloat(chip.style.left)/pageViewport.width;
+    positions[id].ny=parseFloat(chip.style.top)/pageViewport.height;
+    savePositions();
+  });
+}
+
+function buildFieldToggles(){
+  const wrap=document.getElementById('fieldToggles');
+  wrap.innerHTML=FIELDS.map(f=>
+    `<label class="ftog"><input type="checkbox" ${positions[f.id].on?'checked':''} onchange="toggleField('${f.id}',this.checked)">${f.label}</label>`
+  ).join('');
+}
+function toggleField(id,on){positions[id].on=on;savePositions();renderChips();}
+
+function onFontChange(){
+  fontSize=parseFloat(document.getElementById('fontSize').value);
+  document.getElementById('fontVal').textContent=fontSize;
+  localStorage.setItem(fontKey(),fontSize);
+  renderChips();
+}
+function resetPositions(){
+  if(!confirm('重設所有欄位回預設位置？'))return;
+  FIELDS.forEach(f=>{positions[f.id]={nx:f.def.nx,ny:f.def.ny,on:!f.offByDefault};});
+  savePositions();buildFieldToggles();renderChips();toast('已重設位置');
+}
+
+/* ---------- generate filled PDF ---------- */
+function textToPng(text,fontPt){
+  const scale=4, padX=2*scale;
+  const c=document.createElement('canvas');let ctx=c.getContext('2d');
+  const fpx=fontPt*scale;
+  ctx.font=fpx+'px "Noto Sans TC", sans-serif';
+  const w=Math.ceil(ctx.measureText(text).width)+padX*2;
+  const h=Math.ceil(fpx*1.35);
+  c.width=w;c.height=h;
+  ctx=c.getContext('2d');
+  ctx.font=fpx+'px "Noto Sans TC", sans-serif';
+  ctx.fillStyle='#101010';ctx.textBaseline='top';
+  ctx.fillText(text,padX,fpx*0.12);
+  return {url:c.toDataURL('image/png'), wpt:w/scale, hpt:h/scale};
+}
+
+async function generate(){
+  if(!pdfBytes){toast('請先上傳空白範本');return;}
+  const c=curCase();
+  if(!c){toast('請先選擇案件');return;}
+  const btn=document.getElementById('genBtn');btn.disabled=true;setStatus('產生中…');
+  try{
+    await document.fonts.load(fontSize+'px "Noto Sans TC"');
+    const doc=await PDFLib.PDFDocument.load(pdfBytes.slice(0));
+    const page=doc.getPages()[0];
+    const PW=page.getWidth(), PH=page.getHeight();
+    for(const f of FIELDS){
+      const p=positions[f.id];
+      const v=(curValues[f.id]||'').trim();
+      if(!p.on||!v)continue;
+      const {url,wpt,hpt}=textToPng(v,fontSize);
+      const png=await doc.embedPng(url);
+      const x=p.nx*PW;
+      const y=PH-(p.ny*PH)-hpt;
+      page.drawImage(png,{x,y,width:wpt,height:hpt});
+    }
+    const bytes=await doc.save();
+    const blob=new Blob([bytes],{type:'application/pdf'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='台壽理賠_'+(c.ph.name||'')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+    a.click();
+    setStatus('已產生，請開啟下載的 PDF 列印。');
+    toast('已下載套印 PDF');
+  }catch(err){
+    setStatus('產生失敗：'+err.message);toast('產生失敗');
+  }
+  btn.disabled=false;
+}
+
+/* ---------- drag&drop upload ---------- */
+const drop=document.getElementById('drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.style.background='#fdf0d8';}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.style.background='';}));
+drop.addEventListener('drop',async e=>{
+  const f=e.dataTransfer.files[0];if(!f)return;
+  if(f.type!=='application/pdf'){toast('請選擇 PDF 檔');return;}
+  const buf=await f.arrayBuffer();await idbSet(FORM,buf);pdfBytes=buf;await startWorkspace();toast('範本已儲存');
+});
+
+/* ---------- init ---------- */
+(async()=>{
+  await document.fonts.ready;
+  document.getElementById('workCard').style.display='block';
+  document.getElementById('insurer').value=active;
+  await onInsurerChange();
+})();
+window.addEventListener('resize',()=>{if(pdfBytes)renderPreview();});
+</script>
+</body>
+</html>

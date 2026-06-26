@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信用卡付款授權書 · 填寫</title>
+<style>
+  :root{
+    --teal:#245A5E; --teal-deep:#19505A; --gold:#C9A95F; --cream:#FBF1D8;
+    --bg:#FFF8F0; --line:#e7ddcb; --muted:#8a8270; --ink:#2a2a26;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:880px;margin:0 auto;padding:20px 16px 80px;}
+  .top h1{font-size:20px;margin:0;color:var(--teal);}
+  .sub{color:var(--muted);font-size:13.5px;margin:2px 0 20px;}
+  .step{display:flex;align-items:center;gap:10px;margin:22px 0 12px;}
+  .step .num{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:0 0 auto;}
+  .step .t{font-size:17px;font-weight:700;color:var(--teal-deep);}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .grid{display:grid;gap:14px 16px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr 1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+  @media(max-width:430px){.g4{grid-template-columns:1fr 1fr;}}
+  .full{grid-column:1/-1;}
+  @media(max-width:620px){.g2,.g3{grid-template-columns:1fr 1fr;}}
+  @media(max-width:430px){.g2,.g3{grid-template-columns:1fr;}}
+  .field > label{display:block;font-size:13px;font-weight:600;color:var(--teal-deep);margin-bottom:6px;}
+  .field .hint{font-size:12px;color:var(--muted);font-weight:400;}
+  input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+  input[type=text]:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,95,.15);}
+  input::placeholder{color:#bcb4a3;}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:10px;
+    font-size:14.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .seg button.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .checks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .chk{display:flex;align-items:center;gap:6px;padding:8px 13px;border:1px solid var(--line);
+    border-radius:10px;cursor:pointer;font-size:14px;user-select:none;background:#fff;}
+  .chk.on{background:var(--cream);border-color:var(--gold);color:var(--teal-deep);font-weight:600;}
+  .chk input{display:none;}
+  .natl-txt{min-width:130px;flex:1;}
+  .natl-txt[disabled]{background:#f4f1ea;color:#bbb;}
+  .grouplabel{font-size:13px;font-weight:600;color:var(--teal-deep);margin-bottom:7px;}
+  .note-warn{font-size:12.5px;color:#b5663d;margin:4px 0 8px;}
+  .subbox{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fbf9f4;margin-top:4px;}
+  .subbox-title{font-size:13px;font-weight:700;color:var(--teal-deep);margin-bottom:10px;}
+  #authCard{display:none;}
+  .nextnote{margin-top:18px;padding:14px 16px;background:#fff;border:1px dashed var(--gold);
+    border-radius:12px;color:var(--muted);font-size:13.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
+    <h1>信用卡付款授權書 · 填寫</h1>
+  </div>
+  <p class="sub">台灣人壽 · 邊填邊存</p>
+
+  <div class="step"><div class="num">1</div><div class="t">要保人</div></div>
+  <div class="card">
+    <div class="grid">
+      <div class="field full">
+        <label>要保人與授權人是否相同</label>
+        <div class="seg">
+          <button id="seg-diff" class="on" onclick="setSame(false)">不同（分開填授權人）</button>
+          <button id="seg-same" onclick="setSame(true)">相同（要保人＝授權人）</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field">
+        <label>姓名 <span class="hint">（可搜尋客戶）</span></label>
+        <input type="text" id="ph_name" list="clientNames" placeholder="輸入或搜尋客戶姓名" oninput="onNameInput()">
+        <datalist id="clientNames"></datalist>
+      </div>
+      <div class="field"><label>身分證字號</label><input type="text" id="ph_idno" placeholder="A123456789"></div>
+      <div class="field full">
+        <label>國籍</label>
+        <div class="checks">
+          <label class="chk on" id="ph-natl-tw"><input type="checkbox" checked onchange="pickNatl('ph','tw')">中華民國</label>
+          <label class="chk" id="ph-natl-other"><input type="checkbox" onchange="pickNatl('ph','other')">其他</label>
+          <input type="text" id="ph_natl_txt" class="natl-txt" placeholder="國家名稱" disabled>
+        </div>
+      </div>
+      <div class="field"><label>出生年 <span class="hint">（民國）</span></label><input type="text" id="ph_by" placeholder="例：81"></div>
+      <div class="field"><label>出生月</label><input type="text" id="ph_bm" placeholder="12"></div>
+      <div class="field"><label>出生日</label><input type="text" id="ph_bd" placeholder="10"></div>
+      <div class="field"><label>手機</label><input type="text" id="ph_phone" placeholder="09xxxxxxxx"></div>
+      <div class="field full"><label>地址</label><input type="text" id="ph_addr" placeholder="通訊地址"></div>
+    </div>
+  </div>
+
+  <div id="authStep" class="step" style="display:none"><div class="num">2</div><div class="t">授權人</div></div>
+  <div id="authCard" class="card">
+    <div style="margin-bottom:4px">
+      <div class="grouplabel">授權人身分 <span class="hint">（擇一）</span></div>
+      <div class="checks">
+        <label class="chk" id="ident-ph"><input type="checkbox" onchange="pickOne('ident','ph')">要保人</label>
+        <label class="chk" id="ident-ins"><input type="checkbox" onchange="pickOne('ident','ins')">被保險人</label>
+        <label class="chk" id="ident-ben"><input type="checkbox" onchange="pickOne('ident','ben')">受益人</label>
+      </div>
+      <div class="note-warn">※若非要保人、被保險人及受益人時需檢附關係證明。</div>
+      <div id="auInsPickWrap" style="display:none;margin-top:8px">
+        <label class="hint" style="display:block;margin-bottom:4px">選擇哪一位被保人：</label>
+        <select id="auInsPick" onchange="onAuInsPick()"></select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div class="grouplabel">要保人／被保險人之關係 <span class="hint">（擇一）</span></div>
+      <div class="checks">
+        <label class="chk" id="rel-spouse"><input type="checkbox" onchange="pickOne('rel','spouse')">配偶</label>
+        <label class="chk" id="rel-child"><input type="checkbox" onchange="pickOne('rel','child')">子女</label>
+        <label class="chk" id="rel-parent"><input type="checkbox" onchange="pickOne('rel','parent')">父母</label>
+        <label class="chk" id="rel-gp"><input type="checkbox" onchange="pickOne('rel','gp')">(外)祖父母</label>
+        <label class="chk" id="rel-sib"><input type="checkbox" onchange="pickOne('rel','sib')">兄弟姐妹</label>
+        <label class="chk" id="rel-legal"><input type="checkbox" onchange="pickOne('rel','legal')">法定代理人/監護人/輔助人</label>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="field"><label>姓名</label>
+        <input type="text" id="au_name" placeholder="授權人姓名">
+      </div>
+      <div class="field"><label>身分證字號</label><input type="text" id="au_idno" placeholder="A123456789"></div>
+      <div class="field full">
+        <label>國籍</label>
+        <div class="checks">
+          <label class="chk on" id="au-natl-tw"><input type="checkbox" checked onchange="pickNatl('au','tw')">中華民國</label>
+          <label class="chk" id="au-natl-other"><input type="checkbox" onchange="pickNatl('au','other')">其他</label>
+          <input type="text" id="au_natl_txt" class="natl-txt" placeholder="國家名稱" disabled>
+        </div>
+      </div>
+      <div class="field"><label>出生年 <span class="hint">（民國）</span></label><input type="text" id="au_by" placeholder="例：81"></div>
+      <div class="field"><label>出生月</label><input type="text" id="au_bm" placeholder="12"></div>
+      <div class="field"><label>出生日</label><input type="text" id="au_bd" placeholder="10"></div>
+      <div class="field"><label>行動電話</label><input type="text" id="au_phone" placeholder="09xxxxxxxx"></div>
+    </div>
+
+    <div class="subbox" style="margin-top:16px">
+      <div class="subbox-title">法定代理人／監護人／輔助人</div>
+      <div class="note-warn">※如授權人未成年或已受監護宣告／輔助宣告尚未撤銷者，需提供以下資訊。</div>
+      <div class="grid g2">
+        <div class="field"><label>姓名</label><input type="text" id="lr_name"></div>
+        <div class="field"><label>身分證統一編號</label><input type="text" id="lr_idno"></div>
+        <div class="field"><label>行動電話</label><input type="text" id="lr_phone"></div>
+        <div class="field"><label>生日 <span class="hint">（民國）</span></label><input type="text" id="lr_birth" placeholder="例：81/12/10"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第 3 格：繳費別 -->
+  <div class="step"><div class="num">3</div><div class="t">繳費別</div></div>
+  <div class="card">
+    <div class="grouplabel">繳費別 <span class="hint">（擇一）</span></div>
+    <div class="checks">
+      <label class="chk" id="fee-both"><input type="checkbox" onchange="pick1('fee','both')">首期及續期保險費</label>
+      <label class="chk" id="fee-first"><input type="checkbox" onchange="pick1('fee','first')">首期保險費</label>
+      <label class="chk" id="fee-renew"><input type="checkbox" onchange="pick1('fee','renew')">續期保險費</label>
+    </div>
+  </div>
+
+  <!-- 第 4 格：保單號碼 -->
+  <div class="step"><div class="num">4</div><div class="t">保單號碼</div></div>
+  <div class="card">
+    <div class="grid g2">
+      <div class="field"><label>保單號碼 1</label><input type="text" id="policyNo1" placeholder="保單號碼"></div>
+      <div class="field"><label>保單號碼 2</label><input type="text" id="policyNo2" placeholder="保單號碼"></div>
+      <div class="field"><label>保單號碼 3</label><input type="text" id="policyNo3" placeholder="保單號碼"></div>
+      <div class="field"><label>保單號碼 4</label><input type="text" id="policyNo4" placeholder="保單號碼"></div>
+    </div>
+  </div>
+
+  <!-- 第 5 格：信用卡 -->
+  <div class="step"><div class="num">5</div><div class="t">信用卡</div></div>
+  <div class="card">
+    <div class="grid g2">
+      <div class="field full"><label>發卡銀行</label><input type="text" id="cc_bank" placeholder="例：國泰世華"></div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="field"><label>卡號1</label><input type="text" id="cc_no1" inputmode="numeric" maxlength="4" placeholder="4 碼" oninput="detectCard();ccNext(this,'cc_no2')"></div>
+      <div class="field"><label>卡號2</label><input type="text" id="cc_no2" inputmode="numeric" maxlength="4" placeholder="4 碼" oninput="ccNext(this,'cc_no3')"></div>
+      <div class="field"><label>卡號3</label><input type="text" id="cc_no3" inputmode="numeric" maxlength="4" placeholder="4 碼" oninput="ccNext(this,'cc_no4')"></div>
+      <div class="field"><label>卡號4</label><input type="text" id="cc_no4" inputmode="numeric" maxlength="4" placeholder="4 碼" oninput="ccNext(this,'cc_exp_m')"></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field"><label>有效月</label><input type="text" id="cc_exp_m" inputmode="numeric" maxlength="2" placeholder="MM"></div>
+      <div class="field"><label>有效年 <span class="hint">（西元 2 碼）</span></label><input type="text" id="cc_exp_y" inputmode="numeric" maxlength="2" placeholder="YY"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="grouplabel">卡別 <span class="hint">（依卡號自動判斷：4→VISA、5→MASTER、3→JCB）</span></div>
+      <div class="checks">
+        <label class="chk" id="cc-visa">VISA</label>
+        <label class="chk" id="cc-master">MASTER</label>
+        <label class="chk" id="cc-jcb">JCB</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第 6 格：銀行帳戶（此張信用卡授權書無此欄，僅供存檔／他表用） -->
+  <div class="step"><div class="num">6</div><div class="t">銀行帳戶</div></div>
+  <div class="card">
+    <div class="note-warn" style="margin-top:0">※ 信用卡付款授權書本身沒有銀行帳戶欄，這格不會印到這張表。</div>
+    <div class="grouplabel">帳號類型 <span class="hint">（擇一）</span></div>
+    <div class="checks">
+      <label class="chk" id="acct-twd"><input type="checkbox" onchange="pick1('acct','twd')">台幣帳號</label>
+      <label class="chk" id="acct-fx"><input type="checkbox" onchange="pick1('acct','fx')">外幣帳號</label>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field"><label>銀行名稱</label><input type="text" id="bk_name" placeholder="例：玉山銀行"></div>
+      <div class="field"><label>分行</label><input type="text" id="bk_branch" placeholder="例：嘉義分行"></div>
+      <div class="field full"><label>帳號</label><input type="text" id="bk_acct" placeholder="帳號"></div>
+    </div>
+  </div>
+
+  <!-- 套印：選保險公司 + 下載 -->
+  <div class="step"><div class="num">7</div><div class="t">套印下載</div></div>
+  <div class="card">
+    <div class="grouplabel">選擇要套印的保險公司 <span class="hint">（可複選）</span></div>
+    <div class="checks">
+      <label class="chk on" id="ins-taiwanlife"><input type="checkbox" checked onchange="toggleIns(this)">台灣人壽</label>
+    </div>
+    <div class="note-warn" style="margin-top:10px">要新增別家：把那家的空白授權書 PDF 傳給小阿姨，設好就會出現在這裡。</div>
+    <button id="dlBtn" onclick="downloadPDFs()" style="margin-top:14px;width:100%;background:var(--teal);color:#fff;border:none;
+      padding:14px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">⬇ 下載授權書 PDF</button>
+    <div id="dlMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+    <input type="file" id="tplFile" accept="application/pdf" style="display:none">
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
+<script>
+let cases=[];
+let currentCase=null;
+try{cases=JSON.parse(localStorage.getItem('bhw_clients'))||[];}catch(e){cases=[];}
+(function(){
+  const names=[...new Set(cases.map(c=>c.ph&&c.ph.name).filter(Boolean))];
+  document.getElementById('clientNames').innerHTML=names.map(n=>'<option value="'+esc(n)+'"></option>').join('');
+  buildAuthPick();
+})();
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function setVal(id,v){const e=document.getElementById(id);if(e)e.value=v||'';}
+function splitRoc(str){
+  const p=String(str||'').split(/[^0-9]+/).filter(Boolean);
+  let y=p[0]||'',m=p[1]||'',d=p[2]||'';
+  if(y&&parseInt(y,10)>=1912)y=String(parseInt(y,10)-1911);
+  return {y,m,d};
+}
+function onNameInput(){
+  const v=document.getElementById('ph_name').value.trim();
+  const c=cases.find(x=>x.ph&&x.ph.name===v);
+  currentCase=c||null;
+  buildAuthPick();
+  if(!c)return;
+  const b=splitRoc(c.ph.birth);
+  setVal('ph_idno',c.ph.idno);
+  setVal('ph_by',b.y);setVal('ph_bm',b.m);setVal('ph_bd',b.d);
+  setVal('ph_phone',c.ph.phone||c.ph.tel);
+  setVal('ph_addr',c.ph.addr);
+}
+function buildAuthPick(){
+  const sel=document.getElementById('au_pick');
+  if(!sel)return;
+  let opts=['<option value="">-- 請選擇 --</option>'];
+  if(currentCase){
+    (currentCase.insureds||[]).forEach((ins,i)=>{
+      if(ins.name)opts.push('<option value="ins'+i+'">被保人：'+esc(ins.name)+(ins.rel?'（'+esc(ins.rel)+'）':'')+'</option>');
+    });
+  }
+  opts.push('<option value="other">其他（自行輸入）</option>');
+  sel.innerHTML=opts.join('');
+}
+function onAuPick(){
+  const v=document.getElementById('au_pick').value;
+  const clear=()=>['au_name','au_idno','au_by','au_bm','au_bd','au_phone'].forEach(id=>setVal(id,''));
+  if(v==='other'){clear();const n=document.getElementById('au_name');if(n)n.focus();return;}
+  if(v.indexOf('ins')===0&&currentCase){
+    const p=(currentCase.insureds||[])[parseInt(v.slice(3))];
+    if(!p)return;
+    const b=splitRoc(p.birth);
+    setVal('au_name',p.name);
+    setVal('au_idno',p.idno);
+    setVal('au_by',b.y);setVal('au_bm',b.m);setVal('au_bd',b.d);
+    setVal('au_phone',p.phone||p.tel||'');
+  }
+}
+let phSameAuth=false;
+function setSame(on){
+  phSameAuth=on;
+  document.getElementById('seg-same').classList.toggle('on',on);
+  document.getElementById('seg-diff').classList.toggle('on',!on);
+  document.getElementById('authStep').style.display=on?'none':'flex';
+  document.getElementById('authCard').style.display=on?'none':'block';
+}
+function pickNatl(who,which){
+  const tw=document.getElementById(who+'-natl-tw'), other=document.getElementById(who+'-natl-other');
+  const txt=document.getElementById(who+'_natl_txt');
+  const isOther=which==='other';
+  tw.querySelector('input').checked=!isOther;
+  other.querySelector('input').checked=isOther;
+  tw.classList.toggle('on',!isOther);
+  other.classList.toggle('on',isOther);
+  txt.disabled=!isOther;
+  if(!isOther)txt.value='';
+}
+const groups={ident:['ph','ins','ben'],rel:['spouse','child','parent','gp','sib','legal']};
+const groups2={fee:['both','first','renew'],acct:['twd','fx']};
+function pick1(group,key){
+  groups2[group].forEach(k=>{
+    const el=document.getElementById(group+'-'+k);
+    const on=k===key;
+    el.querySelector('input').checked=on;
+    el.classList.toggle('on',on);
+  });
+}
+function detectCard(){
+  const d=(document.getElementById('cc_no1').value||'').replace(/\D/g,'').charAt(0);
+  const map={'4':'visa','5':'master','3':'jcb'};
+  ['visa','master','jcb'].forEach(t=>{
+    document.getElementById('cc-'+t).classList.toggle('on',map[d]===t);
+  });
+}
+function ccNext(el,nextId){
+  if((el.value||'').replace(/\D/g,'').length>=4){
+    const n=document.getElementById(nextId);
+    if(n)n.focus();
+  }
+}
+function pickOne(group,key){
+  // 授權人身分 + 關係 視為同一組，全部互斥（只能擇一）
+  ['ident','rel'].forEach(g=>{
+    groups[g].forEach(k=>{
+      const el=document.getElementById(g+'-'+k);
+      const on=(g===group&&k===key);
+      el.querySelector('input').checked=on;
+      el.classList.toggle('on',on);
+    });
+  });
+  onIdentChange(group==='ident'?key:'');
+}
+function fillAuFrom(p){
+  if(!p)return;
+  const b=splitRoc(p.birth);
+  setVal('au_name',p.name);
+  setVal('au_idno',p.idno);
+  setVal('au_by',b.y);setVal('au_bm',b.m);setVal('au_bd',b.d);
+  setVal('au_phone',p.phone||p.tel||'');
+}
+function onIdentChange(key){
+  const wrap=document.getElementById('auInsPickWrap');
+  wrap.style.display='none';
+  if(!currentCase)return;
+  if(key==='ph'){ fillAuFrom(currentCase.ph); return; }
+  if(key==='ins'){
+    const ins=(currentCase.insureds||[]).filter(x=>x.name);
+    if(ins.length===1){ fillAuFrom(ins[0]); }
+    else if(ins.length>1){
+      const sel=document.getElementById('auInsPick');
+      sel.innerHTML='<option value="">-- 請選擇被保人 --</option>'+
+        ins.map((x,i)=>'<option value="'+i+'">'+esc(x.name)+(x.rel?'（'+esc(x.rel)+'）':'')+'</option>').join('');
+      wrap.style.display='block';
+    }
+  }
+}
+function onAuInsPick(){
+  const v=document.getElementById('auInsPick').value;
+  if(v==='')return;
+  const ins=(currentCase.insureds||[]).filter(x=>x.name);
+  fillAuFrom(ins[parseInt(v)]);
+}
+
+/* ===== 套印引擎 ===== */
+const REG_CODE='0110402073';
+function idb(mode,fn){return new Promise((res,rej)=>{const o=indexedDB.open('bhw_print',1);
+  o.onupgradeneeded=()=>{o.result.createObjectStore('files');};
+  o.onerror=()=>rej(o.error);
+  o.onsuccess=()=>{const tx=o.result.transaction('files',mode);const st=tx.objectStore('files');fn(st,res,rej);tx.onerror=()=>rej(tx.error);};});}
+function idbGet(k){return idb('readonly',(st,res)=>{const r=st.get(k);r.onsuccess=()=>res(r.result);});}
+function idbSet(k,v){return idb('readwrite',(st,res)=>{st.put(v,k);res(true);});}
+
+function gv(id){const e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function isOn(id){const e=document.getElementById(id);return !!(e&&e.classList.contains('on'));}
+function joinDate(y,m,d){return [y,m,d].filter(Boolean).join('/');}
+
+function textToPng(text,fontPt){
+  const scale=4,pad=2*scale,fpx=fontPt*scale;
+  let c=document.createElement('canvas');let ctx=c.getContext('2d');
+  ctx.font=fpx+'px "Noto Sans TC",sans-serif';
+  const w=Math.ceil(ctx.measureText(text).width)+pad*2,h=Math.ceil(fpx*1.35);
+  c.width=w;c.height=h;ctx=c.getContext('2d');
+  ctx.font=fpx+'px "Noto Sans TC",sans-serif';ctx.fillStyle='#101010';ctx.textBaseline='top';
+  ctx.fillText(text,pad,fpx*0.12);
+  return {url:c.toDataURL('image/png'),wpt:w/scale,hpt:h/scale};
+}
+function textToPngCells(text,fontPt,cells){
+  const scale=4,fpx=fontPt*scale,pad=6;
+  const digits=String(text).replace(/\D/g,'').slice(0,cells.length);
+  const origin=cells[0]-pad,wpt=(cells[cells.length-1]+pad)-origin;
+  const c=document.createElement('canvas');c.width=Math.ceil(wpt*scale);c.height=Math.ceil(fpx*1.35);
+  const ctx=c.getContext('2d');ctx.font=fpx+'px "Noto Sans TC",monospace';
+  ctx.fillStyle='#101010';ctx.textBaseline='top';ctx.textAlign='center';
+  for(let i=0;i<digits.length;i++)ctx.fillText(digits[i],(cells[i]-origin)*scale,fpx*0.12);
+  return {url:c.toDataURL('image/png'),wpt,hpt:c.height/scale};
+}
+
+// 依目前填的資料，產生台壽授權書要蓋的欄位清單
+function buildTaiwanlifeStamps(){
+  const F=[]; const add=(v,nx,ny,cells)=>{if(v||v==='✓')F.push({v,nx,ny,cells});};
+  // 繳費別
+  if(isOn('fee-both'))add('✓',0.033,0.109); if(isOn('fee-first'))add('✓',0.193,0.109); if(isOn('fee-renew'))add('✓',0.302,0.109);
+  // 要保人
+  add(gv('ph_name'),0.126,0.154); add(gv('ph_idno'),0.484,0.154); add(gv('ph_phone'),0.796,0.154);
+  // 保單號碼（第 1、2 張對到第一排格子；3、4 暫存待加排）
+  add(gv('policyNo1'),0.0687,0.225,[46.9,60.35,73.8,87.3,100.8,114.25,127.7,141.15,154.6,168.0]);
+  add(gv('policyNo2'),0.318,0.225,[189.25,203.45,217.6,231.85,246.05,260.2,274.45,288.65,302.8,317.05]);
+  // 授權人
+  add(gv('au_name'),0.148,0.369); add(gv('au_idno'),0.689,0.369);
+  add(joinDate(gv('au_by'),gv('au_bm'),gv('au_bd')),0.148,0.397);
+  add(gv('au_phone'),0.689,0.404);
+  if(isOn('au-natl-tw'))add('✓',0.434,0.398);
+  if(isOn('au-natl-other')){add('✓',0.434,0.412); add(gv('au_natl_txt'),0.504,0.411);}
+  // 身分（擇一）
+  if(isOn('ident-ph'))add('✓',0.181,0.430); if(isOn('ident-ins'))add('✓',0.257,0.430); if(isOn('ident-ben'))add('✓',0.349,0.430);
+  // 關係（擇一）
+  if(isOn('rel-spouse'))add('✓',0.317,0.441); if(isOn('rel-child'))add('✓',0.376,0.441); if(isOn('rel-parent'))add('✓',0.434,0.441);
+  if(isOn('rel-gp'))add('✓',0.493,0.441); if(isOn('rel-sib'))add('✓',0.602,0.441); if(isOn('rel-legal'))add('✓',0.695,0.441);
+  // 法代
+  add(gv('lr_name'),0.160,0.488); add(gv('lr_idno'),0.400,0.488); add(gv('lr_phone'),0.630,0.486); add(gv('lr_birth'),0.832,0.488);
+  // 信用卡
+  add(gv('cc_bank'),0.160,0.532);
+  add(gv('cc_no1'),0.15428,0.563,[97.8,109.85,122.0,134.15]);
+  add(gv('cc_no2'),0.26239,0.563,[162.2,174.25,186.35,198.45]);
+  add(gv('cc_no3'),0.37117,0.563,[226.95,239.05,251.15,263.25]);
+  add(gv('cc_no4'),0.48119,0.563,[292.45,304.55,316.65,328.75]);
+  add(gv('cc_exp_m'),0.433,0.532); add(gv('cc_exp_y'),0.524,0.532);
+  // 卡別自動
+  const d=gv('cc_no1').replace(/\D/g,'').charAt(0);
+  if(d==='4')add('✓',0.156,0.592); if(d==='5')add('✓',0.232,0.592); if(d==='3')add('✓',0.324,0.592);
+  // 登錄字號
+  add(REG_CODE,0.390,0.837);
+  return F;
+}
+
+const INSURERS={
+  taiwanlife:{key:'taiwanlife_auth',label:'台灣人壽',build:buildTaiwanlifeStamps}
+};
+
+function toggleIns(el){el.parentElement.classList.toggle('on',el.checked);}
+
+async function ensureTemplate(key){
+  let buf=await idbGet(key);
+  if(buf)return buf;
+  // 沒範本 → 請她上傳一次
+  return new Promise((res)=>{
+    const fi=document.getElementById('tplFile');
+    document.getElementById('dlMsg').textContent='第一次使用：請選擇台灣人壽授權書的「空白 PDF」（只會存在這台裝置，存一次以後免上傳）。';
+    fi.value='';
+    fi.onchange=async()=>{
+      const f=fi.files[0]; if(!f){res(null);return;}
+      const b=await f.arrayBuffer(); await idbSet(key,b); res(b);
+    };
+    fi.click();
+  });
+}
+
+async function makePDF(ins){
+  const buf=await ensureTemplate(ins.key);
+  if(!buf)return null;
+  try{await document.fonts.load('10.5px "Noto Sans TC"');}catch(e){}
+  const ab=(buf instanceof ArrayBuffer)?buf.slice(0):(buf.buffer?buf.buffer.slice(0):buf);
+  const doc=await PDFLib.PDFDocument.load(ab);
+  const page=doc.getPages()[0];
+  const PW=page.getWidth(), PH=page.getHeight();
+  const stamps=ins.build();
+  const FONT=10.5;
+  for(const s of stamps){
+    const val=(s.v==null?'':String(s.v)).trim();
+    if(!val)continue;
+    try{
+      const r=s.cells?textToPngCells(val,FONT,s.cells):textToPng(val,FONT);
+      if(!r||!r.url)continue;
+      const png=await doc.embedPng(r.url);
+      page.drawImage(png,{x:s.nx*PW, y:PH - s.ny*PH - r.hpt, width:r.wpt, height:r.hpt});
+    }catch(err){ console.warn('stamp skip',val,err); }
+  }
+  return await doc.save();
+}
+
+function dl(bytes,name){
+  const blob=new Blob([bytes],{type:'application/pdf'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+async function downloadPDFs(){
+  const msg=document.getElementById('dlMsg');
+  const picked=[];
+  if(document.getElementById('ins-taiwanlife').querySelector('input').checked)picked.push(INSURERS.taiwanlife);
+  if(!picked.length){msg.textContent='請至少勾選一家保險公司。';return;}
+  const nm=gv('ph_name')||'授權書';
+  document.getElementById('dlBtn').disabled=true;
+  try{
+    for(const ins of picked){
+      msg.textContent='產生 '+ins.label+' 授權書中…';
+      const bytes=await makePDF(ins);
+      if(bytes)dl(bytes,ins.label+'_信用卡授權書_'+nm+'.pdf');
+    }
+    msg.textContent='完成，已下載。可直接列印（簽名蓋章請手簽）。';
+  }catch(e){msg.textContent='產生失敗：'+e.message;}
+  document.getElementById('dlBtn').disabled=false;
+}
+</script>
+</body>
+</html>

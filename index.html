@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沚瑜客戶端</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --teal:#245A5E; --teal-deep:#19505A; --gold:#C9A95F; --cream:#FBF1D8;
+    --bg:#FFF8F0; --card:#ffffff; --ink:#232323; --muted:#7a7066;
+    --line:#e7ddcb; --danger:#C8464B; --ok:#3D7A5A;
+    --shadow:0 1px 3px rgba(36,90,94,.06),0 6px 24px rgba(36,90,94,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;font-size:15px;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;}
+  a{color:var(--teal);}
+  button{font-family:inherit;cursor:pointer;}
+
+  header{background:linear-gradient(135deg,var(--teal),var(--teal-deep));
+    color:#fff;padding:18px 22px;display:flex;align-items:center;gap:14px;}
+  .badge{width:44px;height:44px;border-radius:50%;background:var(--cream);
+    border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;}
+  header .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:19px;letter-spacing:1px;}
+  header .s{font-size:12px;opacity:.85;letter-spacing:.5px;}
+  header .spacer{flex:1;}
+  header .count{font-size:13px;background:rgba(255,255,255,.15);padding:5px 13px;border-radius:20px;}
+
+  main{max-width:980px;margin:0 auto;padding:22px 16px 80px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .card h2{font-size:18px;color:var(--teal);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .card .desc{color:var(--muted);font-size:13px;margin-bottom:16px;}
+
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;font-family:inherit;font-size:14.5px;background:#fffdf8;color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(36,90,94,.1);}
+  textarea{resize:vertical;min-height:70px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media(max-width:560px){.row,.row3{grid-template-columns:1fr;}}
+
+  .btn{background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:10px;
+    font-weight:500;font-size:14.5px;}
+  .btn:hover{background:var(--teal-deep);}
+  .btn.gold{background:var(--gold);color:#3a2f15;}
+  .btn.gold:hover{filter:brightness(.95);}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn.ghost:hover{background:#f5efe2;}
+  .btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+  .btn.danger:hover{background:#fdf0f0;}
+  .btn.sm{padding:7px 13px;font-size:13px;}
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  .chip{padding:8px 14px;border-radius:22px;border:1px solid var(--line);background:#fff;
+    font-size:13.5px;color:var(--muted);transition:all .12s;}
+  .chip:hover{border-color:var(--teal);color:var(--teal);}
+  .chip.on{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:500;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .toolbar input{max-width:240px;}
+  .toolbar .spacer{flex:1;}
+  .client-list{display:grid;gap:10px;}
+  .client{background:#fffdf8;border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+    display:flex;align-items:flex-start;gap:12px;}
+  .client .av{width:38px;height:38px;border-radius:50%;background:var(--cream);border:1px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--teal);flex-shrink:0;}
+  .client .info{flex:1;min-width:0;}
+  .client .nm{font-weight:700;font-size:15.5px;}
+  .client .meta{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .client .actions{display:flex;gap:6px;flex-shrink:0;}
+  .client .icon-btn{border:none;background:#f1ece0;width:32px;height:32px;border-radius:8px;font-size:14px;}
+  .client .icon-btn:hover{background:#e6dcc7;}
+  .tag{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:20px;margin-right:5px;
+    background:var(--cream);color:var(--teal-deep);border:1px solid var(--gold);}
+  .tag.warn{background:#fdeede;color:#a05a1a;border-color:#e8c089;}
+  .tag.ok{background:#e6f1ea;color:var(--ok);border-color:#a9cdb8;}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px;}
+  .empty .big{font-size:34px;margin-bottom:8px;}
+  .due-soon{color:var(--danger);font-weight:500;}
+
+  .overlay{position:fixed;inset:0;background:rgba(25,40,42,.4);display:none;
+    align-items:flex-start;justify-content:center;padding:24px 14px;z-index:50;overflow:auto;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:18px;max-width:620px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .modal h2{color:var(--teal);font-size:18px;margin-bottom:6px;}
+  .section{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:#fffdf8;}
+  .section .stitle{font-family:"Noto Serif TC",serif;font-weight:700;color:var(--teal-deep);font-size:15px;
+    display:flex;align-items:center;gap:7px;margin-bottom:2px;}
+  .section .shint{font-size:12px;color:var(--muted);}
+  .insured{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:10px;position:relative;background:#fff;}
+  .insured .rm{position:absolute;top:8px;right:8px;border:none;background:#fbeaea;color:var(--danger);
+    width:26px;height:26px;border-radius:7px;font-size:13px;}
+  .insured .rm:hover{background:#f6d8d8;}
+  .ins-no{font-size:12px;color:var(--muted);font-weight:500;}
+  .pol-wrap{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;}
+  .pol-lbl{font-size:12px;color:var(--teal-deep);font-weight:600;margin-bottom:2px;}
+  .policy-row{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;}
+  .policy-row input{flex:1 1 40%;min-width:0;}
+  .policy-row select{flex:1 1 120px;min-width:110px;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 8px;background:#fff;color:var(--ink);}
+  .pol-detail{flex:1 1 100%;background:#faf7f0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:4px;}
+  .pol-detail .row{margin-top:8px;}
+  .pol-detail .row:first-child{margin-top:0;}
+  .policy-row .rmp{border:none;background:#fbeaea;color:var(--danger);width:32px;height:36px;border-radius:8px;font-size:13px;cursor:pointer;flex:0 0 auto;}
+  .policy-row .rmp:hover{background:#f6d8d8;}
+  .veh-clabel{font-size:12px;color:var(--teal-deep);font-weight:600;margin-top:12px;}
+  .veh-covers{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .cover-chip{display:inline-flex;align-items:center;font-size:13px;padding:7px 14px;border:1px solid var(--line);border-radius:20px;cursor:pointer;background:#fff;color:var(--ink);user-select:none;}
+  .cover-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:600;}
+  .cover-chip.on::before{content:"✓ ";}
+  .cover-chip input{position:absolute;opacity:0;pointer-events:none;width:0;height:0;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal-deep);
+    color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;z-index:80;opacity:0;
+    transition:opacity .3s, transform .3s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .privacy{font-size:12.5px;color:var(--muted);line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div id="gate" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#245A5E,#1b464a);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:18px;padding:26px 22px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+    <div style="text-align:center;font-size:34px;margin-bottom:6px">💡</div>
+    <div style="text-align:center;font-weight:800;font-size:19px;color:#245A5E">信安-安盛體系</div>
+    <div style="text-align:center;font-size:13px;color:#8b8477;margin-top:4px;margin-bottom:18px">請先登入</div>
+
+    <div id="gateTabs" style="display:flex;gap:8px;margin-bottom:14px">
+      <button type="button" id="gt-partner" class="btn ghost" style="flex:1" onclick="gateTab('partner')">夥伴登入</button>
+      <button type="button" id="gt-owner" class="btn ghost" style="flex:1" onclick="gateTab('owner')">我的密碼</button>
+    </div>
+
+    <div id="gatePartner">
+      <label style="font-size:13px;color:#6b6559">姓名</label>
+      <input id="g_name" placeholder="請輸入姓名" style="width:100%;margin-bottom:10px">
+      <label style="font-size:13px;color:#6b6559">手機號碼</label>
+      <input id="g_phone" inputmode="numeric" placeholder="09xxxxxxxx" style="width:100%">
+    </div>
+
+    <div id="gateOwner" style="display:none">
+      <label style="font-size:13px;color:#6b6559">密碼</label>
+      <input id="g_pw" type="password" inputmode="numeric" placeholder="請輸入密碼" style="width:100%">
+    </div>
+
+    <div id="gateMsg" style="color:#C8464B;font-size:13px;min-height:18px;margin-top:8px"></div>
+    <button class="btn" style="width:100%;margin-top:6px" onclick="tryLogin()">登入</button>
+    <div style="font-size:12px;color:#a49c8e;margin-top:12px;line-height:1.5">資料只存在你這台裝置，不上雲端。請定期匯出備份。</div>
+  </div>
+</div>
+
+<header>
+  <div class="badge">💡</div>
+  <div>
+    <div class="t">沚瑜客戶端</div>
+    <div class="s" id="whoami" onclick="confirmLogout()" style="cursor:pointer" title="點一下可登出">私人工具</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="count" id="count">0 筆案件</div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>👤 客戶案件</h2>
+    <div class="desc">每筆案件含要保人、被保人（可多位）、聯絡人。資料只存在你這台裝置的瀏覽器，不上任何雲端。建議定期匯出備份。</div>
+    <div class="toolbar">
+      <input id="search" placeholder="🔍 搜尋姓名 / 電話 / 商品">
+      <select id="filterGrade" style="max-width:120px">
+        <option value="">全部分級</option>
+        <option value="A">A 級</option><option value="B">B 級</option>
+        <option value="C">C 級</option><option value="D">D 級</option>
+        <option value="未分級">未分級</option>
+      </select>
+      <select id="filterProduct" style="max-width:140px">
+        <option value="">全部分類</option>
+        <option value="醫療險">醫療險</option>
+        <option value="意外險">意外險</option>
+        <option value="定期壽險">定期壽險</option>
+        <option value="儲蓄險">儲蓄險</option>
+        <option value="美金保單">美金保單</option>
+        <option value="投資型月配息">投資型月配息</option>
+        <option value="投資型定期定額">投資型定期定額</option>
+        <option value="車險">🚗 車險</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="openClient()">＋ 新增案件</button>
+      <button class="btn ghost" onclick="openOverview()">👤 被保人總覽</button>
+      <button class="btn gold" onclick="exportExcel()">📊 匯出 Excel</button>
+      <button class="btn ghost" onclick="importExcel()">📥 匯入 Excel</button>
+      <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="handleImport(event)">
+    </div>
+    <div class="client-list" id="clientList"></div>
+  </div>
+
+  <div class="card">
+    <h2>📄 文件套印</h2>
+    <div class="desc">選文件種類，進去直接填資料、選保險公司，下載 PDF 列印。</div>
+    <div class="btn-row">
+      <a class="btn gold" href="print.html?doc=claim" style="text-decoration:none;display:inline-flex;align-items:center">🩺 理賠申請書</a>
+      <a class="btn" href="auth.html?form=taiwanlife_auth" style="text-decoration:none;display:inline-flex;align-items:center;background:var(--teal);color:#fff">✍️ 保費授權書</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📚 安盛體系-資料庫</h2>
+    <div class="desc">團隊教材與作業文件。教材在 Notion，需為受邀夥伴才看得到內容。</div>
+    <div class="btn-row">
+      <a class="btn" href="https://app.notion.com/p/3300533eae4580fabedee0121cd1307c" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;background:var(--teal);color:#fff">🎬 保險學習天地</a>
+      <a class="btn ghost" href="https://app.notion.com/p/31e0533eae4580308643cfe7cb29210e" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">💬 銷售反對問題</a>
+      <a class="btn ghost" href="https://app.notion.com/p/3040533eae45801cbcedd73deb6b44b7" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">📈 商品銷售方程式</a>
+      <a class="btn ghost" href="https://app.notion.com/p/3300533eae45802cb34bd9cb9645e074" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">💳 信用卡保費</a>
+      <button class="btn ghost" onclick="togglePreserve()">🔧 保全作業手冊</button>
+    </div>
+    <div id="preserveList" style="display:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px">
+      <div class="shint" style="margin-bottom:8px">各家保險公司保全／契變作業文件。開啟後需輸入該公司系統密碼（請向沚瑜索取）。</div>
+      <div class="btn-row">
+        <a class="btn ghost" href="https://owncloud.myapp.net.tw/owncloud2/%E6%9C%9F%E9%9D%88%E6%97%BA/%E4%BF%9D%E9%9A%AA%E5%85%AC%E5%8F%B8%E4%BD%9C%E6%A5%AD%E6%96%87%E4%BB%B6/%E5%A3%BD%E9%9A%AA/%E5%8F%B0%E7%81%A3(%E5%AF%86%E7%A2%BC%200800099850)/03.%E6%8A%95%E4%BF%9D%E8%A6%8F%E5%89%87/%E5%80%8B%E4%BA%BA%E4%BF%9D%E9%9A%AA%E4%BF%9D%E5%96%AE%E6%9C%8D%E5%8B%99%E6%9A%A8%E5%A5%91%E7%B4%84%E8%AE%8A%E6%9B%B4%E6%89%8B%E5%86%8A(115%E5%B9%B45%E6%9C%88%E7%89%88)_%E7%B6%93%E4%BB%A3%E7%89%88.pdf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">🏢 台灣人壽</a>
+        <a class="btn ghost" href="https://owncloud.myapp.net.tw/owncloud2/%E6%9C%9F%E9%9D%88%E6%97%BA/%E4%BF%9D%E9%9A%AA%E5%85%AC%E5%8F%B8%E4%BD%9C%E6%A5%AD%E6%96%87%E4%BB%B6/%E5%A3%BD%E9%9A%AA/%E5%85%A8%E7%90%83/03.%E6%8A%95%E4%BF%9D%E8%A6%8F%E5%89%87/%E4%BF%9D%E5%85%A8%E4%BD%9C%E6%A5%AD_11506.pdf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">🏢 全球人壽</a>
+      </div>
+      <div class="shint" style="margin-top:8px">其他保險公司陸續新增中。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🗂️ 資料備份</h2>
+    <div class="desc">客戶資料存在瀏覽器，換裝置或清快取會不見。建議定期備份。JSON 備份是完整的（含全部被保人），Excel 適合檢視。</div>
+    <div class="btn-row">
+      <button class="btn gold" onclick="exportExcel()">📊 匯出全部（Excel）</button>
+      <button class="btn ghost" onclick="exportJSON()">💾 匯出 JSON 備份</button>
+      <button class="btn ghost" onclick="importJSON()">📥 還原 JSON 備份</button>
+      <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="handleJSON(event)">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔒 隱私說明</h2>
+    <div class="privacy">
+      · 你輸入的所有客戶資料只在這台裝置的瀏覽器內儲存與運算。<br>
+      · 系統不會主動把任何可識別個資上傳到任何伺服器。<br>
+      · 本工具僅供你個人作業便利使用。
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">新增案件</h2>
+    <input type="hidden" id="cId">
+
+    <!-- 要保人 -->
+    <div class="section">
+      <div class="stitle">📝 要保人</div>
+      <div class="row">
+        <div><label>姓名 *</label><input id="ph_name"></div>
+        <div><label>身分證 / 統編</label><input id="ph_idno"></div>
+      </div>
+      <div class="row">
+        <div><label>出生日期</label><input id="ph_birth" placeholder="可直接貼上，如 1990/01/01"></div>
+        <div><label>手機</label><input id="ph_phone"></div>
+      </div>
+      <div class="row">
+        <div><label>電話</label><input id="ph_tel"></div>
+        <div><label>Email</label><input id="ph_email"></div>
+      </div>
+      <label>地址</label><input id="ph_addr">
+    </div>
+
+    <!-- 被保人 -->
+    <div class="section">
+      <div class="stitle">🛡️ 被保人 <span class="shint">（可多位）</span></div>
+      <div id="insuredWrap"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn ghost sm" onclick="addInsured()">＋ 新增被保人</button>
+        <button class="btn ghost sm" onclick="copyFromPH()" title="把要保人資料複製成被保人">↑ 同要保人</button>
+      </div>
+    </div>
+
+    <!-- 聯絡人 -->
+    <div class="section">
+      <div class="stitle">📞 聯絡人</div>
+      <div class="row3">
+        <div><label>姓名</label><input id="ct_name"></div>
+        <div><label>手機</label><input id="ct_phone"></div>
+        <div><label>關係</label><input id="ct_rel" placeholder="例如：本人/配偶"></div>
+      </div>
+    </div>
+
+    <!-- 金融帳戶 -->
+    <div class="section">
+      <div class="stitle">🏦 金融帳戶 <span class="shint">（理賠匯款用）</span></div>
+      <div class="row">
+        <div><label>戶名</label><input id="bk_holder"></div>
+        <div><label>受款人身分證</label><input id="bk_holderId"></div>
+      </div>
+      <div class="row">
+        <div><label>金融機構名稱</label><input id="bk_bankName" placeholder="例如：中國信託"></div>
+        <div><label>分行</label><input id="bk_branch"></div>
+      </div>
+      <label>帳號</label><input id="bk_acct">
+    </div>
+
+    <!-- 車險 -->
+    <div class="section">
+      <div class="stitle">🚗 車險 <span class="shint">（機車／汽車，可多筆）</span></div>
+      <div id="vehicleWrap"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn ghost sm" onclick="addVehicle()">＋ 新增車險</button>
+      </div>
+    </div>
+
+    <!-- 案件管理 -->
+    <div class="section">
+      <div class="stitle">📌 案件管理</div>
+      <div class="row">
+        <div><label>客戶分級</label>
+          <select id="c_grade">
+            <option value="未分級">未分級</option>
+            <option value="A">A 級客戶</option>
+            <option value="B">B 級客戶</option>
+            <option value="C">C 級客戶</option>
+            <option value="D">D 級客戶</option>
+          </select>
+        </div>
+        <div><label>下次回訪日</label><input id="c_follow" type="date"></div>
+      </div>
+      <label>備註</label><textarea id="c_note"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="saveClient()">儲存</button>
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn danger" id="delBtn" onclick="deleteClient()" style="margin-left:auto">刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ovOverlay">
+  <div class="modal">
+    <h2 id="ovTitle">👤 被保人總覽</h2>
+    <div class="desc">依「姓名＋身分證」把同一人在所有卡片的角色與保單彙整（身分證有填以身分證為準）。純檢視，不會更動資料。</div>
+    <input id="ovSearch" placeholder="🔍 輸入被保人姓名 / 身分證，篩選" style="margin:10px 0" oninput="renderOverview()">
+    <div id="ovList" style="max-height:60vh;overflow:auto"></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn ghost" onclick="closeOverview()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_CLIENTS='bhw_clients';
+
+/* ===== 登入門檻 ===== */
+const OWNER_PW='0226';
+const PARTNERS=[
+  {name:'蘇沚瑜',phone:'0977009140'},
+  {name:'阮馨儀',phone:'0972857940'}
+];
+const LS_AUTH='bhw_auth_user';
+const normPhone=s=>String(s||'').replace(/\D/g,'');
+const normName=s=>String(s||'').trim();
+let gateMode='partner';
+function gateTab(m){
+  gateMode=m;
+  document.getElementById('gatePartner').style.display=(m==='partner')?'block':'none';
+  document.getElementById('gateOwner').style.display=(m==='owner')?'block':'none';
+  document.getElementById('gt-partner').classList.toggle('gold',m==='partner');
+  document.getElementById('gt-owner').classList.toggle('gold',m==='owner');
+  document.getElementById('gateMsg').textContent='';
+}
+function tryLogin(){
+  const msg=document.getElementById('gateMsg');
+  if(gateMode==='owner'){
+    if(document.getElementById('g_pw').value.trim()===OWNER_PW){grantAccess('蘇沚瑜');return;}
+    msg.textContent='密碼不正確。';return;
+  }
+  const n=normName(document.getElementById('g_name').value);
+  const p=normPhone(document.getElementById('g_phone').value);
+  if(!n||!p){msg.textContent='請輸入姓名與手機號碼。';return;}
+  const hit=PARTNERS.find(x=>normName(x.name)===n&&normPhone(x.phone)===p);
+  if(hit){grantAccess(hit.name);return;}
+  msg.textContent='查無此夥伴，請確認姓名與手機是否正確。';
+}
+function grantAccess(name){
+  showApp(name);
+}
+function showApp(name){
+  const g=document.getElementById('gate');if(g)g.style.display='none';
+  const w=document.getElementById('whoami');if(w)w.textContent=name;
+}
+function logout(){location.reload();}
+function confirmLogout(){
+  if(document.getElementById('gate').style.display==='none'&&confirm('要登出嗎？（客戶資料仍會保留在這台裝置）'))logout();
+}
+function togglePreserve(){
+  const el=document.getElementById('preserveList');
+  el.style.display=(el.style.display==='none')?'block':'none';
+}
+(function initAuth(){
+  try{localStorage.removeItem(LS_AUTH);}catch(e){}   // 不記住登入，每次都要重新輸入
+  gateTab('partner');
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&document.getElementById('gate').style.display!=='none')tryLogin();
+  });
+})();
+let clients = migrate(load(LS_CLIENTS, []));
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function saveClients(){localStorage.setItem(LS_CLIENTS,JSON.stringify(clients));}
+
+/* migrate old flat records {name,phone,...} into new {ph,insureds,contact,...} */
+function migrate(arr){
+  let changed=false;
+  arr.forEach(c=>{
+    if(!c.ph){
+      changed=true;
+      c.ph={name:c.name||'',idno:c.idno||'',birth:c.birth||'',phone:c.phone||'',tel:'',email:c.email||'',addr:c.addr||''};
+      c.insureds=c.insureds||[];
+      c.contact=c.contact||{name:'',phone:'',rel:''};
+      delete c.name; delete c.idno; delete c.birth; delete c.phone; delete c.email; delete c.addr;
+    }
+    if(!Array.isArray(c.insureds))c.insureds=[];
+    c.insureds.forEach(i=>{if(!Array.isArray(i.policies))i.policies=[];});
+    if(!Array.isArray(c.vehicles))c.vehicles=[];
+    c.vehicles.forEach(v=>{if(!Array.isArray(v.covers))v.covers=[];});
+    if(!c.contact)c.contact={name:'',phone:'',rel:''};
+    if(!c.grade)c.grade='未分級';
+    if(!c.bank)c.bank={holder:'',holderId:'',bankName:'',branch:'',acct:''};
+  });
+  if(changed){localStorage.setItem(LS_CLIENTS,JSON.stringify(arr));}
+  return arr;
+}
+
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+function daysUntil(d){if(!d)return null;const diff=(new Date(d)-new Date())/86400000;return Math.ceil(diff);}
+function statusTag(s){
+  if(s==='已成交'||s==='續保中')return `<span class="tag ok">${s}</span>`;
+  if(s==='洽談中')return `<span class="tag warn">${s}</span>`;
+  return `<span class="tag">${s||'潛在客戶'}</span>`;
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function gradeBadge(g){
+  if(!g||g==='未分級')return '';
+  const col={A:['#fff','#C8464B'],B:['#3a2f15','#C9A95F'],C:['#fff','#245A5E'],D:['#5a5248','#e1d8c6']};
+  const c=col[g]||col.D;
+  return `<span style="display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:5px;background:${c[1]};color:${c[0]}">${g} 級</span>`;
+}
+
+function clientHasCat(c,cat){
+  if(!cat)return true;
+  if(cat==='車險')return (c.vehicles||[]).some(v=>v.plate||v.insurer||(v.covers&&v.covers.length));
+  return (c.insureds||[]).some(i=>(i.policies||[]).some(p=>p.cat===cat));
+}
+function renderClients(){
+  document.getElementById('count').textContent=clients.length+' 筆案件';
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const fg=document.getElementById('filterGrade').value;
+  const fp=(document.getElementById('filterProduct')||{}).value||'';
+  const list=document.getElementById('clientList');
+  if(!clients.length){
+    list.innerHTML=`<div class="empty"><div class="big">🗂️</div>還沒有案件。<br>點上方「＋ 新增案件」開始建立。</div>`;return;
+  }
+  if(!q&&!fg&&!fp){
+    list.innerHTML=`<div class="empty"><div class="big">🔍</div>輸入姓名 / 電話 / 商品搜尋，<br>或用上方篩選（分級／商品類型）。</div>`;return;
+  }
+  let arr=clients.filter(c=>{
+    const ins=(c.insureds||[]).map(i=>i.name+' '+(i.policies||[]).map(p=>(p.insurer||'')+' '+(p.no||'')+' '+(p.cat||'')+' '+(p.name||'')).join(' ')).join(' ');
+    const veh=(c.vehicles||[]).map(v=>(v.plate||'')+' '+(v.insurer||'')+' '+((v.covers||[]).join(' '))).join(' ');
+    const hay=[c.ph.name,c.ph.phone,c.ph.email,ins,veh,(c.contact&&c.contact.name)].join(' ').toLowerCase();
+    const hit=!q||hay.includes(q);
+    const gr=!fg||(c.grade||'未分級')===fg;
+    const pr=clientHasCat(c,fp);
+    return hit&&gr&&pr;
+  });
+  arr.sort((a,b)=>{
+    const da=daysUntil(a.follow), db=daysUntil(b.follow);
+    if(da===null&&db===null)return 0; if(da===null)return 1; if(db===null)return -1; return da-db;
+  });
+  if(!arr.length){list.innerHTML=`<div class="empty">找不到符合的案件。</div>`;return;}
+  list.innerHTML=arr.map(c=>{
+    const d=daysUntil(c.follow);
+    let follow='';
+    if(d!==null){
+      if(d<0)follow=`<span class="due-soon">⚠ 回訪已逾期 ${-d} 天</span>`;
+      else if(d<=7)follow=`<span class="due-soon">🔔 ${d} 天內回訪</span>`;
+      else follow=`📅 ${c.follow} 回訪`;
+    }
+    const ins=(c.insureds||[]).filter(i=>i.name);
+    let insLine='';
+    if(ins.length){
+      insLine=`🛡️ 被保人：`+ins.map(i=>{
+        let s=esc(i.name)+(i.rel?`(${esc(i.rel)})`:'');
+        const ps=(i.policies||[]).filter(p=>p.insurer||p.no);
+        if(ps.length)s+=' '+ps.map(p=>{
+          let t=`${esc(p.insurer||'')}${p.no?' '+esc(p.no):''}${p.cat?'·'+esc(p.cat):''}`;
+          if(p.name)t+=' '+esc(p.name);
+          if(p.fee)t+=' '+esc(p.cur||'台幣')+esc(p.fee);
+          return '〔'+t+'〕';
+        }).join('');
+        return s;
+      }).join('、');
+    }
+    const veh=(c.vehicles||[]).filter(v=>v.plate||v.insurer||(v.covers&&v.covers.length));
+    let vehLine='';
+    if(veh.length){
+      vehLine=`🚗 車險：`+veh.map(v=>{
+        let s=`${esc(v.type||'')} ${esc(v.plate||'')}${v.insurer?'·'+esc(v.insurer):''}`.trim();
+        const cv=(v.covers||[]);
+        if(cv.length)s+=` ﹝${cv.map(esc).join('·')}﹞`;
+        return s;
+      }).join('、');
+    }
+    return `<div class="client">
+      <div class="av">${esc((c.ph.name||'?').slice(0,1))}</div>
+      <div class="info">
+        <div class="nm">${gradeBadge(c.grade)}${esc(c.ph.name)}</div>
+        <div class="meta">${c.ph.phone?'📱 '+esc(c.ph.phone)+' · ':''}${follow}</div>
+        ${insLine?`<div class="meta" style="margin-top:4px">${insLine}</div>`:''}
+        ${vehLine?`<div class="meta" style="margin-top:4px">${vehLine}</div>`:''}
+        ${c.note?`<div class="meta" style="margin-top:4px">📝 ${esc(c.note)}</div>`:''}
+      </div>
+      <div class="actions">
+        <button class="icon-btn" onclick="openClient('${c.id}')" title="編輯">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('search').oninput=renderClients;
+document.getElementById('filterGrade').onchange=renderClients;
+document.getElementById('filterProduct').onchange=renderClients;
+
+/* ----- insured rows ----- */
+const POLICY_CATS=['醫療險','意外險','定期壽險','儲蓄險','美金保單','投資型月配息','投資型定期定額'];
+const DETAIL_CATS=['儲蓄險','美金保單','投資型月配息','投資型定期定額'];   // 這幾類要填商品明細
+function maturity(start,term){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(start||'');
+  const n=parseInt(term,10);
+  if(!m||!n)return '';
+  return (parseInt(m[1],10)+n)+'-'+m[2]+'-'+m[3];   // 投保日期 + N 年，保留月日
+}
+function recalcMaturity(el){
+  const row=el.closest('.policy-row');if(!row)return;
+  const s=row.querySelector('.pol-start'), t=row.querySelector('.pol-term'), e=row.querySelector('.pol-end');
+  if(e)e.value=maturity(s?s.value:'', t?t.value:'');
+}
+function policyRowHTML(insIdx,polIdx,p){
+  p=p||{};
+  const catOpt=`<option value="">未分類</option>`+POLICY_CATS.map(c=>`<option${p.cat===c?' selected':''}>${c}</option>`).join('');
+  let detail='';
+  if(DETAIL_CATS.includes(p.cat)){
+    const defCur=(p.cur||(p.cat==='美金保單'?'美金':'台幣'));
+    const curOpt=['台幣','美金'].map(x=>`<option${defCur===x?' selected':''}>${x}</option>`).join('');
+    const hasTerm=(p.cat==='儲蓄險'||p.cat==='美金保單');
+    if(hasTerm){
+      const termOpt=`<option value="">—</option>`+Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}"${String(p.term||'')===String(n)?' selected':''}>${n} 年</option>`).join('');
+      const endVal=esc(p.end||maturity(p.start,p.term));
+      detail=`<div class="pol-detail">
+        <div class="row"><div style="flex:1"><label>商品名稱</label><input class="pol-name" value="${esc(p.name||'')}" placeholder="例：新光美利多"></div></div>
+        <div class="row">
+          <div><label>投保日期</label><input class="pol-start" type="date" value="${esc(p.start||'')}" onchange="recalcMaturity(this)"></div>
+          <div><label>年期</label><select class="pol-term" onchange="recalcMaturity(this)">${termOpt}</select></div>
+        </div>
+        <div class="row">
+          <div><label>到期日 <span class="shint">（自動計算）</span></label><input class="pol-end" type="date" value="${endVal}" readonly style="background:#f3f1ea;color:#6b6559"></div>
+          <div><label>每年保費</label><input class="pol-fee" inputmode="numeric" value="${esc(p.fee||'')}" placeholder="金額"></div>
+        </div>
+        <div class="row">
+          <div><label>幣別</label><select class="pol-cur">${curOpt}</select></div>
+          <div></div>
+        </div>
+      </div>`;
+    } else {
+      const feeLabel=(p.cat==='投資型月配息')?'躉繳保費':'每年保費';
+      detail=`<div class="pol-detail">
+        <div class="row"><div style="flex:1"><label>商品名稱</label><input class="pol-name" value="${esc(p.name||'')}" placeholder="例：海外月配息基金"></div></div>
+        <div class="row">
+          <div><label>${feeLabel}</label><input class="pol-fee" inputmode="numeric" value="${esc(p.fee||'')}" placeholder="金額"></div>
+          <div><label>幣別</label><select class="pol-cur">${curOpt}</select></div>
+        </div>
+      </div>`;
+    }
+  }
+  return `<div class="policy-row" data-pol="${polIdx}">
+    <input class="pol-insurer" value="${esc(p.insurer||'')}" placeholder="保險公司">
+    <input class="pol-no" value="${esc(p.no||'')}" placeholder="保單號碼">
+    <select class="pol-cat" onchange="onPolCatChange()">${catOpt}</select>
+    <button class="rmp" onclick="rmPolicy(${insIdx},${polIdx})" title="移除保單">✕</button>
+    ${detail}
+  </div>`;
+}
+function onPolCatChange(){readInsuredFromDOM();renderInsured();}
+function insuredRowHTML(idx,data){
+  data=data||{};
+  const pols=(data.policies||[]);
+  return `<div class="insured" data-idx="${idx}">
+    <button class="rm" onclick="rmInsured(${idx})" title="移除">✕</button>
+    <div class="ins-no">被保人 ${idx+1}</div>
+    <div class="row">
+      <div><label>姓名</label><input class="ins-name" value="${esc(data.name||'')}"></div>
+      <div><label>與要保人關係</label><input class="ins-rel" value="${esc(data.rel||'')}" placeholder="例如：子/女/配偶"></div>
+    </div>
+    <div class="row">
+      <div><label>身分證</label><input class="ins-idno" value="${esc(data.idno||'')}"></div>
+      <div><label>出生日期</label><input class="ins-birth" value="${esc(data.birth||'')}" placeholder="可直接貼上"></div>
+    </div>
+    <div class="pol-wrap">
+      <div class="pol-lbl">📋 保單（保險公司＋保單號碼，可多筆）</div>
+      ${pols.map((p,pi)=>policyRowHTML(idx,pi,p)).join('')}
+      <button class="btn ghost sm" style="margin-top:8px" onclick="addPolicy(${idx})">＋ 新增保單</button>
+    </div>
+  </div>`;
+}
+let insuredDraft=[];
+function renderInsured(){
+  const wrap=document.getElementById('insuredWrap');
+  if(!insuredDraft.length){wrap.innerHTML=`<div class="shint" style="margin-top:8px">尚未新增被保人，可按下方「＋ 新增被保人」。</div>`;return;}
+  wrap.innerHTML=insuredDraft.map((d,i)=>insuredRowHTML(i,d)).join('');
+}
+
+/* ----- insured DOM read/write ----- */
+function readInsuredFromDOM(){
+  const rows=document.querySelectorAll('#insuredWrap .insured');
+  insuredDraft=Array.from(rows).map(r=>{
+    const pols=Array.from(r.querySelectorAll('.policy-row')).map(p=>{
+      const cat=(p.querySelector('.pol-cat')||{}).value||'';
+      const o={insurer:p.querySelector('.pol-insurer').value.trim(),no:p.querySelector('.pol-no').value.trim(),cat};
+      if(DETAIL_CATS.includes(cat)){
+        const g=s=>{const el=p.querySelector(s);return el?el.value.trim?el.value.trim():el.value:'';};
+        o.name=g('.pol-name');o.start=g('.pol-start');o.fee=g('.pol-fee');
+        const curEl=p.querySelector('.pol-cur'); if(curEl)o.cur=curEl.value;
+        if(cat==='儲蓄險'||cat==='美金保單'){o.term=g('.pol-term');o.end=g('.pol-end')||maturity(o.start,o.term);}
+      }
+      return o;
+    }).filter(p=>p.insurer||p.no||p.cat||p.name||p.start||p.fee);
+    return {
+      name:r.querySelector('.ins-name').value.trim(),
+      rel:r.querySelector('.ins-rel').value.trim(),
+      idno:r.querySelector('.ins-idno').value.trim(),
+      birth:r.querySelector('.ins-birth').value.trim(),
+      policies:pols
+    };
+  });
+}
+function addInsured(){readInsuredFromDOM();insuredDraft.push({name:'',rel:'',idno:'',birth:'',policies:[]});renderInsured();}
+function rmInsured(i){readInsuredFromDOM();insuredDraft.splice(i,1);renderInsured();}
+function addPolicy(i){readInsuredFromDOM();insuredDraft[i].policies=insuredDraft[i].policies||[];insuredDraft[i].policies.push({insurer:'',no:'',cat:''});renderInsured();}
+function rmPolicy(i,pi){readInsuredFromDOM();(insuredDraft[i].policies||[]).splice(pi,1);renderInsured();}
+function copyFromPH(){
+  readInsuredFromDOM();
+  insuredDraft.push({name:val('ph_name'),rel:'本人',idno:val('ph_idno'),birth:val('ph_birth'),policies:[]});
+  renderInsured();
+}
+
+/* ----- 車險 rows ----- */
+const COVER_OPTS=['強制險','第三責任','拖吊險','車體險乙式','車體險丙式'];
+function vehicleRowHTML(idx,data){
+  data=data||{};
+  const cv=data.covers||[];
+  const coverHTML=COVER_OPTS.map(o=>
+    `<label class="cover-chip${cv.includes(o)?' on':''}"><input type="checkbox" class="veh-cover" value="${o}" ${cv.includes(o)?'checked':''} onchange="this.closest('.cover-chip').classList.toggle('on',this.checked)">${o}</label>`
+  ).join('');
+  return `<div class="insured" data-vidx="${idx}">
+    <button class="rm" onclick="rmVehicle(${idx})" title="移除">✕</button>
+    <div class="ins-no">車險 ${idx+1}</div>
+    <div class="row3">
+      <div><label>車種</label>
+        <select class="veh-type">
+          <option value="機車"${data.type!=='汽車'?' selected':''}>機車</option>
+          <option value="汽車"${data.type==='汽車'?' selected':''}>汽車</option>
+        </select>
+      </div>
+      <div><label>車牌</label><input class="veh-plate" value="${esc(data.plate||'')}" placeholder="例：ABC-1234"></div>
+      <div><label>保險公司</label><input class="veh-insurer" value="${esc(data.insurer||'')}"></div>
+    </div>
+    <div class="veh-clabel">投保險種（可複選，用來分類）</div>
+    <div class="veh-covers">${coverHTML}</div>
+  </div>`;
+}
+let vehicleDraft=[];
+function renderVehicle(){
+  const wrap=document.getElementById('vehicleWrap');
+  if(!vehicleDraft.length){wrap.innerHTML=`<div class="shint" style="margin-top:8px">尚未新增車險，可按下方「＋ 新增車險」。</div>`;return;}
+  wrap.innerHTML=vehicleDraft.map((d,i)=>vehicleRowHTML(i,d)).join('');
+}
+function readVehicleFromDOM(){
+  const rows=document.querySelectorAll('#vehicleWrap .insured');
+  vehicleDraft=Array.from(rows).map(r=>({
+    type:r.querySelector('.veh-type').value,
+    plate:r.querySelector('.veh-plate').value.trim(),
+    insurer:r.querySelector('.veh-insurer').value.trim(),
+    covers:Array.from(r.querySelectorAll('.veh-cover')).filter(c=>c.checked).map(c=>c.value)
+  }));
+}
+function addVehicle(){readVehicleFromDOM();vehicleDraft.push({type:'機車',plate:'',insurer:'',covers:[]});renderVehicle();}
+function rmVehicle(i){readVehicleFromDOM();vehicleDraft.splice(i,1);renderVehicle();}
+
+/* ----- modal ----- */
+function val(id){return document.getElementById(id).value.trim();}
+function setv(id,v){document.getElementById(id).value=v||'';}
+function openClient(id){
+  const c=id?clients.find(x=>x.id===id):null;
+  document.getElementById('modalTitle').textContent=c?'編輯案件':'新增案件';
+  document.getElementById('cId').value=c?c.id:'';
+  const ph=c?c.ph:{}, ct=c?(c.contact||{}):{};
+  setv('ph_name',ph.name);setv('ph_idno',ph.idno);setv('ph_birth',ph.birth);
+  setv('ph_phone',ph.phone);setv('ph_tel',ph.tel);setv('ph_email',ph.email);setv('ph_addr',ph.addr);
+  setv('ct_name',ct.name);setv('ct_phone',ct.phone);setv('ct_rel',ct.rel);
+  const bk=c?(c.bank||{}):{};
+  setv('bk_holder',bk.holder);setv('bk_holderId',bk.holderId);
+  setv('bk_bankName',bk.bankName);setv('bk_branch',bk.branch);setv('bk_acct',bk.acct);
+  setv('c_follow',c?c.follow:'');setv('c_note',c?c.note:'');
+  document.getElementById('c_grade').value=c?(c.grade||'未分級'):'未分級';
+  insuredDraft=c?JSON.parse(JSON.stringify(c.insureds||[])):[];
+  renderInsured();
+  vehicleDraft=c?JSON.parse(JSON.stringify(c.vehicles||[])):[];
+  renderVehicle();
+  document.getElementById('delBtn').style.display=c?'block':'none';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function saveClient(){
+  const name=val('ph_name');
+  if(!name){toast('要保人姓名必填');return;}
+  readInsuredFromDOM();
+  readVehicleFromDOM();
+  const id=val('cId');
+  const obj={
+    id:id||('c'+Date.now()),
+    ph:{name,idno:val('ph_idno'),birth:val('ph_birth'),phone:val('ph_phone'),
+        tel:val('ph_tel'),email:val('ph_email'),addr:val('ph_addr')},
+    insureds:insuredDraft.filter(i=>i.name||i.idno||(i.policies&&i.policies.length)),
+    vehicles:vehicleDraft.filter(v=>v.plate||v.insurer||(v.covers&&v.covers.length)),
+    contact:{name:val('ct_name'),phone:val('ct_phone'),rel:val('ct_rel')},
+    bank:{holder:val('bk_holder'),holderId:val('bk_holderId'),bankName:val('bk_bankName'),branch:val('bk_branch'),acct:val('bk_acct')},
+    grade:document.getElementById('c_grade').value,
+    follow:val('c_follow'),note:val('c_note')
+  };
+  if(id){const i=clients.findIndex(x=>x.id===id);clients[i]=obj;}
+  else clients.unshift(obj);
+  saveClients();renderClients();closeModal();toast('已儲存');
+}
+function deleteClient(){
+  const id=val('cId');if(!id)return;
+  if(!confirm('確定刪除這筆案件？此動作無法復原。'))return;
+  clients=clients.filter(x=>x.id!==id);saveClients();renderClients();closeModal();toast('已刪除');
+}
+
+/* ----- Excel ----- */
+const FLAT=[
+  ['ph.name','要保人姓名'],['ph.idno','要保人身分證/統編'],['ph.birth','要保人出生日期'],
+  ['ph.phone','要保人手機'],['ph.tel','要保人電話'],['ph.email','要保人Email'],['ph.addr','要保人地址'],
+  ['_insureds','被保人'],
+  ['_vehicles','車險'],
+  ['contact.name','聯絡人姓名'],['contact.phone','聯絡人手機'],['contact.rel','聯絡人關係'],
+  ['bank.holder','戶名'],['bank.holderId','受款人身分證'],['bank.bankName','金融機構名稱'],['bank.branch','分行'],['bank.acct','帳號'],
+  ['grade','客戶分級'],['follow','下次回訪日'],['note','備註']
+];
+function getPath(o,p){return p.split('.').reduce((a,k)=>a&&a[k]!=null?a[k]:'',o);}
+function insuredsToStr(arr){
+  return (arr||[]).map(i=>{
+    let s=i.name||'';
+    if(i.rel)s+=`（${i.rel}）`;
+    if(i.idno)s+=` ${i.idno}`;
+    if(i.birth)s+=` ${i.birth}`;
+    const ps=(i.policies||[]).filter(p=>p.insurer||p.no);
+    if(ps.length)s+=` ［${ps.map(p=>{
+      let seg=`${p.insurer||''}/${p.no||''}/${p.cat||''}`;
+      if(DETAIL_CATS.includes(p.cat))seg+=`/${p.name||''}/${p.start||''}/${p.end||''}/${p.fee||''}/${p.cur||''}/${p.term||''}`;
+      return seg;
+    }).join('｜')}］`;
+    return s.trim();
+  }).filter(Boolean).join(' ； ');
+}
+function strToInsureds(str){
+  if(!str)return [];
+  return String(str).split(/[；;]/).map(chunk=>{
+    chunk=chunk.trim();if(!chunk)return null;
+    let policies=[];
+    const pm=chunk.match(/［(.*?)］/);
+    if(pm){
+      policies=pm[1].split(/[｜|]/).map(x=>{
+        const a=x.split('/');
+        const p={insurer:(a[0]||'').trim(),no:(a[1]||'').trim(),cat:(a[2]||'').trim()};
+        if(a.length>3){p.name=(a[3]||'').trim();p.start=(a[4]||'').trim();p.end=(a[5]||'').trim();p.fee=(a[6]||'').trim();p.cur=(a[7]||'').trim()||'台幣';p.term=(a[8]||'').trim();}
+        return p;
+      }).filter(p=>p.insurer||p.no);
+      chunk=chunk.replace(pm[0],' ');
+    }
+    let rel='';const m=chunk.match(/（(.*?)）/);if(m){rel=m[1];chunk=chunk.replace(m[0],' ');}
+    const parts=chunk.trim().split(/\s+/).filter(Boolean);
+    return {name:parts[0]||'',rel,idno:parts[1]||'',birth:parts[2]||'',policies};
+  }).filter(x=>x&&(x.name||x.policies.length));
+}
+function vehiclesToStr(arr){
+  return (arr||[]).map(v=>{
+    let s=`${v.type||'機車'} ${v.plate||''}${v.insurer?'/'+v.insurer:''}`.trim();
+    const cv=(v.covers||[]).filter(Boolean);
+    if(cv.length)s+=` ［${cv.join('｜')}］`;
+    return s;
+  }).filter(Boolean).join(' ； ');
+}
+function strToVehicles(str){
+  if(!str)return [];
+  return String(str).split(/[；;]/).map(chunk=>{
+    chunk=chunk.trim();if(!chunk)return null;
+    let covers=[];
+    const cm=chunk.match(/［(.*?)］/);
+    if(cm){covers=cm[1].split(/[｜|·,，]/).map(s=>s.trim()).filter(Boolean);chunk=chunk.replace(cm[0],' ');}
+    let insurer='';const si=chunk.indexOf('/');
+    if(si>=0){insurer=chunk.slice(si+1).trim();chunk=chunk.slice(0,si).trim();}
+    const parts=chunk.split(/\s+/).filter(Boolean);
+    let type='機車',plate='';
+    if(parts[0]==='機車'||parts[0]==='汽車'){type=parts[0];plate=parts.slice(1).join(' ');}
+    else plate=parts.join(' ');
+    return {type,plate,insurer,covers};
+  }).filter(x=>x&&(x.plate||x.insurer||x.covers.length));
+}
+function exportExcel(){
+  if(!clients.length){toast('目前沒有資料可匯出');return;}
+  const rows=clients.map(c=>{
+    const o={};
+    FLAT.forEach(([k,t])=>{o[t]=k==='_insureds'?insuredsToStr(c.insureds):k==='_vehicles'?vehiclesToStr(c.vehicles):getPath(c,k);});
+    return o;
+  });
+  const ws=XLSX.utils.json_to_sheet(rows,{header:FLAT.map(c=>c[1])});
+  ws['!cols']=FLAT.map(c=>({wch:c[0]==='_insureds'?30:16}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'客戶案件');
+  XLSX.writeFile(wb,'客戶案件_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('已匯出 Excel');
+}
+function importExcel(){document.getElementById('importFile').click();}
+function handleImport(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws);
+      const rev={}; FLAT.forEach(([k,t])=>rev[t]=k);
+      let n=0;
+      rows.forEach(row=>{
+        const c={id:'c'+Date.now()+Math.random().toString(36).slice(2,6),
+          ph:{name:'',idno:'',birth:'',phone:'',tel:'',email:'',addr:''},
+          insureds:[],vehicles:[],contact:{name:'',phone:'',rel:''},
+          bank:{holder:'',holderId:'',bankName:'',branch:'',acct:''},
+          grade:'未分級',follow:'',note:''};
+        Object.keys(row).forEach(t=>{
+          const k=rev[t];if(!k)return;
+          const v=String(row[t]);
+          if(k==='_insureds')c.insureds=strToInsureds(v);
+          else if(k==='_vehicles')c.vehicles=strToVehicles(v);
+          else if(k.includes('.')){const [a,b]=k.split('.');c[a][b]=v;}
+          else c[k]=v;
+        });
+        if(c.ph.name){clients.unshift(c);n++;}
+      });
+      saveClients();renderClients();toast(`已匯入 ${n} 筆`);
+    }catch(err){toast('匯入失敗，請確認檔案格式');}
+  };
+  r.readAsArrayBuffer(f); e.target.value='';
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(clients,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='客戶備份_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('已匯出 JSON 備份');
+}
+function importJSON(){document.getElementById('jsonFile').click();}
+function handleJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{const data=JSON.parse(ev.target.result);
+      if(Array.isArray(data)){clients=migrate(data);saveClients();renderClients();toast('已還原備份');}
+      else toast('檔案格式不正確');
+    }catch(err){toast('還原失敗');}
+  };
+  r.readAsText(f); e.target.value='';
+}
+
+document.getElementById('overlay').onclick=e=>{if(e.target.id==='overlay')closeModal();};
+document.getElementById('ovOverlay').onclick=e=>{if(e.target.id==='ovOverlay')closeOverview();};
+
+/* ----- 被保人總覽（依 姓名＋身分證 聚合） ----- */
+function normId(s){return String(s||'').trim().toUpperCase();}
+function buildPersonIndex(){
+  const nameIds={};
+  clients.forEach(c=>{
+    const ppl=[];
+    if(c.ph&&c.ph.name)ppl.push([c.ph.name,c.ph.idno]);
+    (c.insureds||[]).forEach(i=>{if(i.name||i.idno)ppl.push([i.name,i.idno]);});
+    ppl.forEach(([n,id])=>{id=normId(id);if(n&&id){(nameIds[n]=nameIds[n]||new Set()).add(id);}});
+  });
+  const keyOf=(name,idno)=>{
+    idno=normId(idno);
+    if(idno)return 'id:'+idno;
+    const s=nameIds[name]; if(s&&s.size===1)return 'id:'+[...s][0];
+    return 'nm:'+(name||'(未命名)');
+  };
+  const persons={};
+  clients.forEach(c=>{
+    const phKey=(c.ph&&c.ph.name)?keyOf(c.ph.name,c.ph.idno):null;
+    const insByKey={};
+    (c.insureds||[]).forEach(i=>{if(i.name||i.idno){const k=keyOf(i.name,i.idno);(insByKey[k]=insByKey[k]||[]).push(i);}});
+    const involved=new Set([...(phKey?[phKey]:[]),...Object.keys(insByKey)]);
+    involved.forEach(k=>{
+      const insList=insByKey[k]||[];
+      const isPH=(k===phKey);
+      const rec=persons[k]||(persons[k]={name:'',idno:k.startsWith('id:')?k.slice(3):'',apps:[]});
+      const nm=(insList[0]&&insList[0].name)||(isPH?c.ph.name:'')||'';
+      if(!rec.name&&nm)rec.name=nm;
+      if(!rec.idno){const idg=normId((insList[0]&&insList[0].idno)||(isPH?c.ph.idno:''));if(idg)rec.idno=idg;}
+      const roles=[]; if(isPH)roles.push('要保人');
+      insList.forEach(i=>roles.push('被保人'+(i.rel?'（'+i.rel+'）':'')));
+      const policies=insList.flatMap(i=>(i.policies||[]).filter(p=>p.insurer||p.no));
+      rec.apps.push({cardId:c.id,phName:c.ph?c.ph.name:'',roles,policies,isPH,
+        othersInsured:(c.insureds||[]).map(i=>i.name).filter(Boolean),
+        vehicles:(c.vehicles||[]).filter(v=>v.plate||v.insurer||(v.covers&&v.covers.length))});
+    });
+  });
+  return persons;
+}
+function openOverview(){document.getElementById('ovSearch').value='';renderOverview();document.getElementById('ovOverlay').classList.add('open');}
+function closeOverview(){document.getElementById('ovOverlay').classList.remove('open');}
+function jumpFromOverview(id){closeOverview();openClient(id);}
+function renderOverview(){
+  const q=(document.getElementById('ovSearch').value||'').trim().toLowerCase();
+  let arr=Object.values(buildPersonIndex());
+  arr.sort((a,b)=>b.apps.length-a.apps.length||(a.name||'').localeCompare(b.name||''));
+  if(q)arr=arr.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.idno||'').toLowerCase().includes(q));
+  const box=document.getElementById('ovList');
+  if(!arr.length){box.innerHTML=`<div class="empty" style="padding:24px">${clients.length?'找不到符合的被保人。':'還沒有資料，先去新增案件。'}</div>`;return;}
+  box.innerHTML=arr.map(p=>{
+    const apps=p.apps.map(a=>{
+      let line=`<div style="margin-top:6px"><b>要保人：${esc(a.phName||'—')}</b> ｜ 此人：${esc(a.roles.join('＋'))}`;
+      if(a.isPH){const others=a.othersInsured.filter(n=>n&&n!==p.name);if(others.length)line+=` ｜ 本卡被保人：${others.map(esc).join('、')}`;}
+      line+=`</div>`;
+      if(a.policies.length)line+=`<div class="meta" style="margin-top:2px">📄 `+a.policies.map(pl=>{
+        let t=`${esc(pl.insurer||'')}${pl.no?' '+esc(pl.no):''}${pl.cat?'·'+esc(pl.cat):''}`;
+        if(pl.name)t+=' '+esc(pl.name);
+        if(pl.fee)t+=' '+esc(pl.cur||'台幣')+esc(pl.fee);
+        return '〔'+t+'〕';
+      }).join('')+`</div>`;
+      if(a.isPH&&a.vehicles.length)line+=`<div class="meta" style="margin-top:2px">🚗 `+a.vehicles.map(v=>esc(((v.type||'')+' '+(v.plate||'')).trim())+((v.covers&&v.covers.length)?' ﹝'+v.covers.map(esc).join('·')+'﹞':'')).join('、')+`</div>`;
+      line+=`<button class="btn ghost sm" style="margin-top:4px" onclick="jumpFromOverview('${a.cardId}')">開啟此卡片 ✏️</button>`;
+      return `<div style="border-left:3px solid var(--teal);padding:2px 0 8px 10px;margin-top:8px">${line}</div>`;
+    }).join('');
+    return `<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-weight:700;color:var(--teal);font-size:15px">👤 ${esc(p.name||'(未命名)')}${p.idno?` <span class="shint">· ${esc(p.idno)}</span>`:''} <span class="shint">（${p.apps.length} 張卡）</span></div>
+      ${apps}
+    </div>`;
+  }).join('');
+}
+renderClients();
+</script>
+</body>
+</html>

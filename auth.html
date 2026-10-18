@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640e</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640f</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -1914,8 +1914,22 @@ function pickInsured(i){
   const b=splitRoc(x.birth);
   setVal('cl_ins_by',b.y);setVal('cl_ins_bm',b.m);setVal('cl_ins_bd',b.d);
   if(currentCase&&currentCase.ph)setVal('cl_ins_mobile',currentCase.ph.phone||currentCase.ph.tel||'');
-  const box=document.getElementById('insPick');
-  if(box)[...box.children].forEach((el,k)=>el.classList.toggle('on',k===i));
+  // 書面分析欄位同步帶入（這張表有自己的被保險人欄位，不吃 ins_name）
+  setVal('an_ins_name',x.name||'');
+  setVal('an_ins_idno',x.idno||'');
+  setVal('an_ins_birth',b.y?(b.y+'/'+b.m+'/'+b.d):'');
+  // 書面分析模式：點了被保人就代表「不是同要保人」，自動取消勾選並展開欄位
+  if(typeof docType!=='undefined'&&docType==='書面分析'){
+    const same=document.getElementById('an-ins_same');
+    const isSelf=!!(currentCase&&currentCase.ph&&currentCase.ph.name===x.name);
+    if(same)same.classList.toggle('on',isSelf);
+    if(typeof anSync==='function')anSync();
+  }
+  // 三排被保人按鈕（要保人區／理賠卡／書面分析卡）一起標示選中
+  ['insPick','clInsPick','anInsPick'].forEach(id=>{
+    const box=document.getElementById(id);
+    if(box)[...box.children].forEach((el,k)=>{if(el.classList&&el.classList.contains('chk'))el.classList.toggle('on',k===i);});
+  });
   if(typeof saveDraft==='function')saveDraft();
 }
 function onIdentChange(key){
@@ -3104,7 +3118,7 @@ function onAnalysisSearch(v){
   onNameInput();
   if(c){
     const i=(_insList||[]).findIndex(x=>x.name===v);
-    if(i>=0){pickInsured(i);const tgl=document.getElementById('an-ins_same');if(tgl)tgl.classList.remove('on');anSync();}
+    if(i>=0)pickInsured(i);
   }
   anBuildPlates();
   anShowFound(c);

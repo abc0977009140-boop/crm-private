@@ -558,6 +558,12 @@ function gradeBadge(g){
   return `<span style="display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:5px;background:${c[1]};color:${c[0]}">${g} 級</span>`;
 }
 
+function policyMatchesCategory(p,cat){
+  if(!cat)return true;
+  if(cat==='__lapsed__')return !!p.lapsed;
+  if(cat==='車險')return false;
+  return p.cat===cat;
+}
 function clientHasCat(c,cat){
   if(!cat)return true;
   if(cat==='__lapsed__')return (c.insureds||[]).some(i=>(i.policies||[]).some(p=>p.lapsed))||(c.vehicles||[]).some(v=>v.lapsed);
@@ -713,8 +719,8 @@ function renderClients(){
     if(ins.length){
       insHTML=ins.map(i=>{
         const head=`<div style="font-weight:700;color:#3a3a3a;margin-top:8px">🛡️ ${esc(i.name)}${i.rel?`（${esc(i.rel)}）`:''}${i.idno?`<span style="font-weight:500;font-size:12px;color:#8a8378;margin-left:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">${esc(i.idno)}</span>`:''}</div>`;
-        const ps=(i.policies||[]).filter(p=>p.insurer||p.no||p.cat||p.lapsed);
-        if(!ps.length)return head;
+        const ps=(i.policies||[]).filter(p=>(p.insurer||p.no||p.cat||p.lapsed)&&policyMatchesCategory(p,fp));
+        if(!ps.length)return fp?'':head;
         const rows=ps.map(p=>{
           let l1=`${esc(p.insurer||'')}${p.no?' <span style="color:#999">'+esc(p.no)+'</span>':''}`;
           if(p.eff)l1+=` <span style="color:#8a8378;font-size:12px">· 生效 ${esc(isoToRoc(p.eff))}</span>`;
@@ -731,7 +737,7 @@ function renderClients(){
         return head+rows;
       }).join('');
     }
-    const veh=(c.vehicles||[]).filter(v=>v.plate||v.insurer||(v.covers&&v.covers.length));
+    const veh=(c.vehicles||[]).filter(v=>(v.plate||v.insurer||(v.covers&&v.covers.length))&&(!fp||fp==='車險'||(fp==='__lapsed__'&&v.lapsed)));
     let vehLine='';
     if(veh.length){
       vehLine=`🚗 車險：`+veh.map(v=>{

@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640f</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640g</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -3807,7 +3807,7 @@ function applyDocMode(){
   };
   pair(document.getElementById('authCard'),!an);
   pair(document.getElementById('feeCard'),!an);
-  const pay=document.getElementById('payCard');if(pay)pay.style.display=an?'none':'';
+  const pay=document.getElementById('payCard');if(pay)pay.style.display=(an||docType==='理賠申請')?'none':'';
   const pr=document.getElementById('policyRows');
   if(pr)pair(pr.closest('.card'),!an);
   const lb=document.getElementById('dlSumLabel');

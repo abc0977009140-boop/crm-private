@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640k</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640l</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -165,13 +165,13 @@
     <div class="grouplabel" style="margin-top:12px">選擇客戶 <span class="hint">（搜尋客戶，帶入要保人、被保人與車牌）</span></div>
     <div class="field full"><input type="text" id="an_search" list="anNames" placeholder="輸入要保人或被保人姓名" oninput="onAnalysisSearch(this.value)"><datalist id="anNames"></datalist></div>
     <div id="anFound" style="display:none;background:#f4f8f6;border:1px solid #d6e5df;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px;line-height:1.7"></div>
-    <div class="field full" id="anInsPickWrap" style="display:none;margin-top:8px"><label>此客戶的被保人 <span class="hint">（點一下帶入）</span></label><div id="anInsPick" class="checks"></div></div>
+    <div class="field full" id="anInsPickWrap" style="display:none;margin-top:8px"><label>本次報告被保人快捷選擇 <span class="hint">（含要保人本人；也可在下方搜尋或手填）</span></label><div id="anInsPick" class="checks"></div></div>
 
     <div class="grouplabel" style="margin-top:12px">本次報告要保人</div>
     <div class="field full" id="anPhPickWrap" style="display:none"><label>點選姓名，帶入本次報告要保人（不更動客戶原始資料）</label><div id="anPhPick" class="checks"></div></div>
     <div class="grid5" style="margin-top:8px">
-      <div class="field" style="grid-column:span 2"><label>要保人姓名</label><input type="text" id="an_ph_name"></div>
-      <div class="field" style="grid-column:span 2"><label>要保人身分證字號</label><input type="text" id="an_ph_idno"></div>
+      <div class="field" style="grid-column:span 2"><label>要保人姓名</label><input type="text" id="an_ph_name" placeholder="搜尋舊客戶，或自行輸入" autocomplete="off" oninput="onDocumentPersonSearch('report_ph',this.value)"><div id="personResults_report_ph" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div></div>
+      <div class="field" style="grid-column:span 2"><label>要保人身分證字號</label><input type="text" id="an_ph_idno" oninput="anSync()"></div>
     </div>
     <div class="grid5">
       <div class="field"><label>性別</label>
@@ -180,7 +180,7 @@
           <label class="chk" id="an-ph_f" onclick="anPick('phsex',this)">女</label>
         </div>
       </div>
-      <div class="field" style="grid-column:span 2"><label>生日（民國，例 75/3/8）</label><input id="an_ph_birth" placeholder="自動帶客戶生日"></div>
+      <div class="field" style="grid-column:span 2"><label>生日（民國，例 75/3/8）</label><input id="an_ph_birth" oninput="anSync()" placeholder="自動帶客戶生日"></div>
       <div class="field" style="grid-column:span 2"><label>職業 <span class="hint">（旅平／車險底稿已印「一般」，留白即可）</span></label><input id="an_ph_job"></div>
     </div>
 
@@ -188,10 +188,10 @@
     <div class="checks">
       <label class="chk on" id="an-ins_same" onclick="clToggle(this);anSync()">同要保人</label>
     </div>
-    <div class="note-warn" style="margin-top:8px;font-size:12.5px">不同人時，在上面「此客戶的被保人」點一下，姓名、身分證、生日會自動帶進來，這裡只要補職業和性別。</div>
+    <div class="note-warn" style="margin-top:8px;font-size:12.5px">可點「同要保人」替自己投保，或從快捷名單／下方姓名搜尋所有舊客戶；沒有資料就自行輸入，不受原保單的親子關係限制。</div>
     <div id="anInsBlock" style="display:none">
       <div class="grid5" style="margin-top:8px">
-        <div class="field" style="grid-column:span 2"><label>姓名</label><input id="an_ins_name"></div>
+        <div class="field" style="grid-column:span 2"><label>姓名</label><input type="text" id="an_ins_name" placeholder="搜尋舊客戶，或自行輸入" autocomplete="off" oninput="onDocumentPersonSearch('report_ins',this.value)"><div id="personResults_report_ins" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div></div>
         <div class="field" style="grid-column:span 2"><label>身分證字號</label><input id="an_ins_idno"></div>
         <div class="field"><label>性別</label>
           <div class="checks" style="margin-top:2px">
@@ -503,8 +503,8 @@
     <div class="grid g2" style="margin-top:14px">
       <div class="field">
         <label>姓名 <span class="req">必填✱</span> <span class="hint">（可搜尋客戶）</span></label>
-        <input type="text" id="ph_name" list="clientNames" placeholder="輸入或搜尋客戶姓名" oninput="onNameInput()">
-        <datalist id="clientNames"></datalist>
+        <input type="text" id="ph_name" list="clientNames" placeholder="輸入或搜尋客戶姓名" oninput="onSharedPolicyholderSearch(this.value)">
+        <datalist id="clientNames"></datalist><div id="personResults_ph" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div>
         <div id="authHist" style="display:none;background:#faf7f0;border:1px solid #ece3d0;border-radius:10px;padding:10px 12px;margin-top:8px"></div>
 
       </div>
@@ -522,7 +522,7 @@
       <div class="field"><label>出生日</label><input type="text" id="ph_bd" placeholder="10"></div>
       <div class="field"><label>手機</label><input type="text" id="ph_phone" placeholder="09xxxxxxxx"></div>
       <div class="field full"><label>地址</label><input type="text" id="ph_addr" placeholder="通訊地址"></div>
-      <div class="field"><label>被保險人姓名 <span class="req" id="reqInsName" style="display:none">必填✱</span> <span class="hint">（與要保人不同時填；可點下方被保人）</span></label><input type="text" id="ins_name" list="insuredNames" placeholder="被保人姓名"><datalist id="insuredNames"></datalist></div>
+      <div class="field"><label>被保險人姓名 <span class="req" id="reqInsName" style="display:none">必填✱</span> <span class="hint">（與要保人不同時填；可點下方被保人）</span></label><input type="text" id="ins_name" list="insuredNames" placeholder="搜尋舊客戶，或自行輸入" autocomplete="off" oninput="onDocumentPersonSearch('ins',this.value)"><datalist id="insuredNames"></datalist><button type="button" onclick="documentInsuredSame()" style="margin-top:6px">同要保人（本人投保）</button><div id="personResults_ins" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div></div>
       <div class="field"><label>被保險人身分證 <span class="req" id="reqInsId" style="display:none">必填✱</span> <span class="hint">（部分表單用）</span></label><input type="text" id="ins_idno" placeholder="A123456789"></div>
       <div class="field full" id="insPickWrap" style="display:none"><label>此客戶的被保人 <span class="hint">（點一下帶入）</span></label><div id="insPick" class="checks"></div></div>
     </div>
@@ -1813,6 +1813,59 @@ function pickOne(group,key){
   onIdentChange(group==='ident'?key:'');
   if(typeof updateRelSide==='function')updateRelSide();
 }
+let _documentMatches={},_docAutoNames={};
+function documentResetRelation(same){
+  ['self','spouse','child','parent','employ','other'].forEach(k=>{const e=document.getElementById('an-rel_'+k);if(e)e.classList.toggle('on',!!same&&k==='self');});
+  const other=document.getElementById('anRelOtherWrap');if(other)other.style.display='none';
+}
+function documentPersonSex(role,p){
+  const sex=String(p.sex||p.gender||''),id=String(p.idno||'').toUpperCase();
+  const male=sex==='男'||sex==='M'||(!sex&&/^[A-Z]1/.test(id)),female=sex==='女'||sex==='F'||(!sex&&/^[A-Z]2/.test(id));
+  ['m','f'].forEach((k,i)=>{const e=document.getElementById('an-'+role+'_'+k);if(e)e.classList.toggle('on',i===0?male:female);});
+}
+function closeDocumentPersonSearch(role){
+  _documentMatches[role]=[];const box=document.getElementById('personResults_'+role);if(box){box.style.display='none';box.innerHTML='';}
+}
+function refreshDocumentPolicyholder(){
+  const person={name:gv('ins_name'),idno:gv('ins_idno')};onNameInput();
+  setVal('ins_name',person.name);setVal('ins_idno',person.idno);
+}
+function onSharedPolicyholderSearch(value){refreshDocumentPolicyholder();onDocumentPersonSearch('ph',value);}
+function onDocumentPersonSearch(role,value){
+  const q=String(value||'').trim();
+  if(role==='report_ins'){
+    const same=document.getElementById('an-ins_same');if(same)same.classList.remove('on');documentResetRelation(false);
+  }
+  if(_docAutoNames[role]&&q!==_docAutoNames[role]){
+    const fields=role==='report_ph'?['an_ph_idno','an_ph_birth','an_ph_job']:role==='report_ins'?['an_ins_idno','an_ins_birth','an_ins_job']:role==='ins'?['ins_idno']:[];
+    fields.forEach(id=>setVal(id,''));
+    if(role.startsWith('report_'))documentPersonSex(role==='report_ph'?'ph':'ins',{});
+    _docAutoNames[role]='';
+  }
+  if(role==='report_ph')anSync();
+  const box=document.getElementById('personResults_'+role);if(!box)return;
+  if(!q){closeDocumentPersonSearch(role);return;}
+  const hits=allAuthorizerPeople().filter(p=>(p.name+' '+p.idno+' '+p.phone+' '+p.tel).toLowerCase().includes(q.toLowerCase()));
+  _documentMatches[role]=hits.slice(0,20);box.style.display='block';
+  if(!hits.length){box.innerHTML='<div class="hint" style="padding:8px">沒有符合的舊客戶，可以直接手動填寫姓名及其他資料。</div>';return;}
+  box.innerHTML=_documentMatches[role].map((p,i)=>'<button type="button" onclick="pickDocumentPerson(\''+role+'\','+i+')" style="display:block;width:100%;text-align:left;padding:8px;margin-top:4px;border:1px solid #e7ddcb;border-radius:8px;background:#fff;color:#245A5E;font:inherit;cursor:pointer">'+esc(p.name)+'<small style="display:block;color:#8a8270">'+esc(p.context)+(p.idno?'・證號末四碼 '+esc(String(p.idno).slice(-4)):'')+'</small></button>').join('');
+}
+function pickDocumentPerson(role,i){
+  const p=(_documentMatches[role]||[])[i];if(!p)return;
+  if(role==='report_ph'){anSetPolicyholder(p);anSync();}
+  else if(role==='report_ins')anSetInsured(p);
+  else if(role==='ins'){
+    setVal('ins_name',p.name);setVal('ins_idno',p.idno);_docAutoNames.ins=p.name;
+  }else if(role==='ph'){
+    setVal('ph_name',p.name);refreshDocumentPolicyholder();
+    const identity=x=>p.idno&&x.idno?String(p.idno)===String(x.idno):p.name===x.name;
+    currentCase=(cases||[]).find(c=>c.ph&&identity(c.ph))||(cases||[]).find(c=>(c.insureds||[]).some(identity))||null;
+    const b=splitRoc(p.birth);setVal('ph_idno',p.idno);setVal('ph_by',b.y);setVal('ph_bm',b.m);setVal('ph_bd',b.d);setVal('ph_phone',p.phone||p.tel);setVal('ph_addr',p.addr);
+    buildAuthPick();buildInsuredPick();buildPolicyPicker();updateDocVisibility();
+  }
+  closeDocumentPersonSearch(role);if(typeof saveDraft==='function')saveDraft();
+}
+function documentInsuredSame(){setVal('ins_name',gv('ph_name'));setVal('ins_idno',gv('ph_idno'));_docAutoNames.ins=gv('ph_name');closeDocumentPersonSearch('ins');saveDraft();}
 let _auAutoName='',_auSearchMatches=[];
 function allAuthorizerPeople(){
   const out=[],seen=new Map();
@@ -1820,8 +1873,8 @@ function allAuthorizerPeople(){
     if(!p||!p.name)return;
     const key=p.idno?'id:'+String(p.idno).replace(/\s/g,'').toUpperCase():JSON.stringify([p.name,p.birth||'',p.phone||p.tel||'']);
     const hit=seen.get(key);
-    if(hit){['birth','phone','tel'].forEach(k=>{if(!hit[k]&&p[k])hit[k]=p[k];});return;}
-    const row={name:p.name,idno:p.idno||'',birth:p.birth||'',phone:p.phone||'',tel:p.tel||'',context};
+    if(hit){['birth','phone','tel','addr','sex'].forEach(k=>{if(!hit[k]&&p[k])hit[k]=p[k];});return;}
+    const row={name:p.name,idno:p.idno||'',birth:p.birth||'',phone:p.phone||'',tel:p.tel||'',addr:p.addr||'',sex:p.sex||p.gender||'',context};
     seen.set(key,row);out.push(row);
   };
   (cases||[]).forEach(c=>{
@@ -1875,6 +1928,7 @@ function insuredHasInsurer(ins,insKey){
   return (ins.policies||[]).some(p=>matchInsurer(p.insurer)===insKey);
 }
 function buildInsuredPick(){
+  if(typeof anBuildPolicyholders==='function')anBuildPolicyholders(currentCase);
   if(typeof anBuildPlates==='function')anBuildPlates();
   const wrap=document.getElementById('insPickWrap'),box=document.getElementById('insPick'),dl=document.getElementById('insuredNames');
   const all=(currentCase&&currentCase.insureds?currentCase.insureds:[]).filter(x=>x.name);
@@ -1897,11 +1951,7 @@ function buildInsuredPick(){
     if(_insList.length){cwrap.style.display='block';cbox.innerHTML=html;}
     else{cwrap.style.display='none';cbox.innerHTML='';}
   }
-  const abox=document.getElementById('anInsPick'),awrap=document.getElementById('anInsPickWrap');
-  if(abox&&awrap){
-    if(_insList.length){awrap.style.display='block';abox.innerHTML=html;}
-    else{awrap.style.display='none';abox.innerHTML='';}
-  }
+
 }
 function onClaimSearch(v){
   v=(v||'').trim();
@@ -2017,7 +2067,7 @@ function pickInsured(i){
     if(typeof anSync==='function')anSync();
   }
   // 三排被保人按鈕（要保人區／理賠卡／書面分析卡）一起標示選中
-  ['insPick','clInsPick','anInsPick'].forEach(id=>{
+  ['insPick','clInsPick'].forEach(id=>{
     const box=document.getElementById(id);
     if(box)[...box.children].forEach((el,k)=>{if(el.classList&&el.classList.contains('chk'))el.classList.toggle('on',k===i);});
   });
@@ -3255,15 +3305,27 @@ function anBuildPolicyholders(c){
   });
   if(box)box.innerHTML=_anPhList.map((p,i)=>`<label class="chk" onclick="anPickPolicyholder(${i})">${esc(p.name)}</label>`).join('');
   if(wrap)wrap.style.display=_anPhList.length?'':'none';
+  const ibox=document.getElementById('anInsPick'),iwrap=document.getElementById('anInsPickWrap');
+  if(ibox)ibox.innerHTML=_anPhList.map((p,i)=>`<label class="chk" onclick="anPickInsuredPerson(${i})">${esc(p.name)}${c&&p===c.ph?'（原要保人本人）':p.rel?'（'+esc(p.rel)+'）':''}</label>`).join('');
+  if(iwrap)iwrap.style.display=_anPhList.length?'':'none';
 }
 function anPickPolicyholder(i){
   const p=_anPhList[i];if(!p)return;
-  anSetPolicyholder(p);
-  // 選擇要保人後預設本人投保，仍可另點被保人改為不同人。
-  const same=document.getElementById('an-ins_same');if(same)same.classList.add('on');
-  anSync();
+  anSetPolicyholder(p);anSync();
+}
+function anPickInsuredPerson(i){const p=_anPhList[i];if(p)anSetInsured(p);}
+function anSetInsured(p){
+  _docAutoNames.report_ins=p.name||'';
+  setVal('an_ins_name',p.name||'');setVal('an_ins_idno',p.idno||'');
+  const b=splitRoc(p.birth);setVal('an_ins_birth',b.y?b.y+'/'+b.m+'/'+b.d:'');setVal('an_ins_job','');
+  documentPersonSex('ins',p);
+  const same=gv('an_ph_idno')&&p.idno?gv('an_ph_idno')===p.idno:gv('an_ph_name')===p.name;
+  const el=document.getElementById('an-ins_same');if(el)el.classList.toggle('on',same);
+  documentResetRelation(same);anSync();
+  if(typeof saveDraft==='function')saveDraft();
 }
 function anSetPolicyholder(p){
+  _docAutoNames.report_ph=p.name||'';
   setVal('an_ph_name',p.name||'');setVal('an_ph_idno',p.idno||'');
   const b=splitRoc(p.birth);
   setVal('an_ph_birth',b.y?b.y+'/'+b.m+'/'+b.d:'');
@@ -3315,12 +3377,19 @@ function anPick(group,el){
     desig:['an-desig_no','an-desig_yes'],other:['an-other_yes','an-other_no']};
   (map[group]||[]).forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});
   el.classList.add('on');
+  if(group==='phsex'&&isOn('an-ins_same'))anSync();
   if(group==='rel'){const w=document.getElementById('anRelOtherWrap');if(w)w.style.display=isOn('an-rel_other')?'':'none';}
   if(group==='desig'){const w=document.getElementById('anDesigWrap');if(w)w.style.display=isOn('an-desig_yes')?'':'none';}
   if(typeof saveDraft==='function')saveDraft();
 }
 function anSync(){
-  const b=document.getElementById('anInsBlock');if(b)b.style.display=isOn('an-ins_same')?'none':'';
+  const b=document.getElementById('anInsBlock');if(b)b.style.display='';
+  if(isOn('an-ins_same')){
+    _docAutoNames.report_ins=gv('an_ph_name');
+    ['name','idno','birth','job'].forEach(k=>setVal('an_ins_'+k,gv('an_ph_'+k)));
+    ['m','f'].forEach(k=>{const e=document.getElementById('an-ins_'+k);if(e)e.classList.toggle('on',isOn('an-ph_'+k));});
+    documentResetRelation(true);
+  }
   const car=document.getElementById('anCarBlock');
   const sel_=selectedInsurers();
   const isCar=sel_.indexOf('an_car_cathay')>=0||sel_.indexOf('an_car_sk')>=0;
@@ -3343,7 +3412,7 @@ function anPeriodOneYear(){
 }
 /* 生日：要保人欄已有 ph_by/ph_bm/ph_bd 就組起來 */
 function anBirth(pre){
-  const t=gv('an_'+pre+'_birth');if(pre==='ph'||t)return t;
+  const t=gv('an_'+pre+'_birth');return t;
   const y=(pre==='ph')?gv('ph_by'):gv('cl_ins_by');
   const m=(pre==='ph')?gv('ph_bm'):gv('cl_ins_bm');
   const d=(pre==='ph')?gv('ph_bd'):gv('cl_ins_bd');
@@ -3363,7 +3432,7 @@ function buildAnalysis(kind){
     T('ins_birth',anBirth('ph'));T('ins_job',gv('an_ph_job'));
     V('ins_sex_m',isOn('an-ph_m'));V('ins_sex_f',isOn('an-ph_f'));
   }else{
-    T('ins_name',gv('an_ins_name')||gv('ins_name'));T('ins_idno',gv('an_ins_idno')||gv('ins_idno'));
+    T('ins_name',gv('an_ins_name'));T('ins_idno',gv('an_ins_idno'));
     T('ins_birth',anBirth('ins'));T('ins_job',gv('an_ins_job'));
     V('ins_sex_m',isOn('an-ins_m'));V('ins_sex_f',isOn('an-ins_f'));
   }
@@ -3690,7 +3759,7 @@ function selectDoc(t){
   const payCard=document.getElementById('payCard');if(payCard)payCard.style.display=(t==='理賠申請'||t==='書面分析')?'none':'block';
   // 理賠模式：隱藏要保人、授權人兩整區（理賠只需被保人資料）
   const claim=(t==='理賠申請');
-  ['phStep','phCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=claim?'none':'';});
+  ['phStep','phCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   ['feeStep','feeCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   if(claim){
     ['authStep','authCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
@@ -4099,7 +4168,7 @@ function validateRequired(){
     if(!gv('an_ph_name'))m.push('要保人姓名尚未填寫');
     if(!gv('an_ph_idno'))m.push('要保人身分證字號尚未填寫');
     if(!isOn('an-ph_m')&&!isOn('an-ph_f'))m.push('要保人性別尚未選擇');
-    if(!isOn('an-ins_same')&&!gv('an_ins_name')&&!gv('ins_name'))m.push('被保險人姓名尚未填寫');
+    if(!isOn('an-ins_same')&&!gv('an_ins_name'))m.push('被保險人姓名尚未填寫');
     const _s=selectedInsurers();
     if((_s.indexOf('an_car_cathay')>=0||_s.indexOf('an_car_sk')>=0)&&!gv('an_plate'))m.push('車牌號碼尚未填寫');
     if(!gv('an_date_y'))m.push('日期尚未填寫（可按「填今天」）');

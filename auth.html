@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640j</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640k</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -562,7 +562,9 @@
 
     <div class="grid g2">
       <div class="field"><label>姓名</label>
-        <input type="text" id="au_name" placeholder="授權人姓名">
+        <input type="text" id="au_name" placeholder="搜尋舊客戶姓名，或直接輸入新授權人" autocomplete="off" oninput="onAuNameSearch(this.value)">
+        <div id="auSearchResults" style="display:none;max-height:260px;overflow:auto;margin-top:6px" aria-live="polite"></div>
+        <div class="hint" style="margin-top:6px">可搜尋所有已存要保人與被保險人；點選後帶入資料。沒有舊資料就直接填寫下方欄位。</div>
       </div>
       <div class="field"><label>身分證字號</label><input type="text" id="au_idno" placeholder="A123456789"></div>
       <div class="field full">
@@ -1736,18 +1738,12 @@ function updatePolicyRouting(){
 }
 function onAuPick(){
   const v=document.getElementById('au_pick').value;
-  const clear=()=>['au_name','au_idno','au_by','au_bm','au_bd','au_phone'].forEach(id=>setVal(id,''));
-  if(v==='other'){clear();const n=document.getElementById('au_name');if(n)n.focus();return;}
+  if(v==='other'){clearAuFields();const n=document.getElementById('au_name');if(n)n.focus();return;}
   if(v.indexOf('ins')===0&&currentCase){
-    const p=(currentCase.insureds||[])[parseInt(v.slice(3))];
-    if(!p)return;
-    const b=splitRoc(p.birth);
-    setVal('au_name',p.name);
-    setVal('au_idno',p.idno);
-    setVal('au_by',b.y);setVal('au_bm',b.m);setVal('au_bd',b.d);
-    setVal('au_phone',p.phone||p.tel||'');
+    const p=(currentCase.insureds||[])[parseInt(v.slice(3))];if(p)fillAuFrom(p);
   }
 }
+
 let phSameAuth=false;
 function setSame(on){
   phSameAuth=on;
@@ -1817,8 +1813,50 @@ function pickOne(group,key){
   onIdentChange(group==='ident'?key:'');
   if(typeof updateRelSide==='function')updateRelSide();
 }
+let _auAutoName='',_auSearchMatches=[];
+function allAuthorizerPeople(){
+  const out=[],seen=new Map();
+  const add=(p,context)=>{
+    if(!p||!p.name)return;
+    const key=p.idno?'id:'+String(p.idno).replace(/\s/g,'').toUpperCase():JSON.stringify([p.name,p.birth||'',p.phone||p.tel||'']);
+    const hit=seen.get(key);
+    if(hit){['birth','phone','tel'].forEach(k=>{if(!hit[k]&&p[k])hit[k]=p[k];});return;}
+    const row={name:p.name,idno:p.idno||'',birth:p.birth||'',phone:p.phone||'',tel:p.tel||'',context};
+    seen.set(key,row);out.push(row);
+  };
+  (cases||[]).forEach(c=>{
+    add(c.ph,'要保人');
+    (c.insureds||[]).forEach(p=>add(p,'被保險人'+(c.ph&&c.ph.name?'・'+c.ph.name+'的客戶資料':'')));
+  });
+  return out;
+}
+function closeAuSearch(){
+  _auSearchMatches=[];const box=document.getElementById('auSearchResults');if(box){box.innerHTML='';box.style.display='none';}
+}
+function onAuNameSearch(value){
+  const name=String(value||'').trim();
+  // 只清除上一位自動帶入的身分資料，保留使用者手動填寫流程。
+  if(_auAutoName&&name!==_auAutoName){
+    ['au_idno','au_by','au_bm','au_bd','au_phone'].forEach(id=>setVal(id,''));_auAutoName='';
+  }
+  const box=document.getElementById('auSearchResults');if(!box)return;
+  if(!name){closeAuSearch();return;}
+  const q=name.toLowerCase();
+  const hits=allAuthorizerPeople().filter(p=>(p.name+' '+p.idno+' '+p.phone+' '+p.tel).toLowerCase().includes(q));
+  _auSearchMatches=hits.slice(0,20);box.style.display='block';
+  if(!hits.length){box.innerHTML='<div class="hint" style="padding:8px">沒有符合的舊客戶，請直接手動填寫授權人資料。</div>';return;}
+  box.innerHTML=_auSearchMatches.map((p,i)=>{
+    const tail=p.idno?'・證號末四碼 '+esc(p.idno.slice(-4)):'';
+    return '<button type="button" onclick="pickAuSearch('+i+')" style="display:block;width:100%;text-align:left;border:1px solid #e7ddcb;border-radius:8px;background:#fff;padding:9px 10px;margin-top:4px;font:inherit;color:#245A5E;cursor:pointer">'+esc(p.name)+'<small style="display:block;color:#8a8270">'+esc(p.context)+tail+'</small></button>';
+  }).join('')+(hits.length>20?'<div class="hint" style="padding:8px">符合資料較多，請輸入完整姓名或證號縮小範圍。</div>':'');
+}
+function pickAuSearch(i){
+  const p=_auSearchMatches[i];if(!p)return;
+  fillAuFrom(p);closeAuSearch();if(typeof saveDraft==='function')saveDraft();
+}
 function fillAuFrom(p){
   if(!p)return;
+  _auAutoName=p.name||'';closeAuSearch();
   const b=splitRoc(p.birth);
   setVal('au_name',p.name);
   setVal('au_idno',p.idno);
@@ -1826,6 +1864,7 @@ function fillAuFrom(p){
   setVal('au_phone',p.phone||p.tel||'');
 }
 function clearAuFields(){
+  _auAutoName='';closeAuSearch();
   ['au_name','au_idno','au_by','au_bm','au_bd','au_phone','au_natl_txt'].forEach(id=>setVal(id,''));
   if(typeof saveDraft==='function')saveDraft();
 }
@@ -4255,7 +4294,7 @@ function currentIdentKey(){
 }
 function loadAuByCase(){try{return JSON.parse(localStorage.getItem(AU_BYCASE_KEY))||{};}catch(e){return {};}}
 function auFieldsObj(){return {au_name:gv('au_name'),au_idno:gv('au_idno'),au_by:gv('au_by'),au_bm:gv('au_bm'),au_bd:gv('au_bd'),au_phone:gv('au_phone'),au_natl_txt:gv('au_natl_txt')};}
-function fillAuFieldsFrom(r){setVal('au_name',r.au_name||'');setVal('au_idno',r.au_idno||'');setVal('au_by',r.au_by||'');setVal('au_bm',r.au_bm||'');setVal('au_bd',r.au_bd||'');setVal('au_phone',r.au_phone||'');setVal('au_natl_txt',r.au_natl_txt||'');}
+function fillAuFieldsFrom(r){_auAutoName=r.au_name||'';closeAuSearch();setVal('au_name',r.au_name||'');setVal('au_idno',r.au_idno||'');setVal('au_by',r.au_by||'');setVal('au_bm',r.au_bm||'');setVal('au_bd',r.au_bd||'');setVal('au_phone',r.au_phone||'');setVal('au_natl_txt',r.au_natl_txt||'');}
 function savedAuFor(id){const k=caseKey();return (loadAuByCase()[k]||{})[id];}
 function saveAuForCase(){
   const k=caseKey();if(!k)return;

@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640g</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640h</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -166,7 +166,12 @@
     <div id="anFound" style="display:none;background:#f4f8f6;border:1px solid #d6e5df;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px;line-height:1.7"></div>
     <div class="field full" id="anInsPickWrap" style="display:none;margin-top:8px"><label>此客戶的被保人 <span class="hint">（點一下帶入）</span></label><div id="anInsPick" class="checks"></div></div>
 
-    <div class="grouplabel" style="margin-top:12px">要保人</div>
+    <div class="grouplabel" style="margin-top:12px">本次報告要保人</div>
+    <div class="field full" id="anPhPickWrap" style="display:none"><label>點選姓名，帶入本次報告要保人（不更動客戶原始資料）</label><div id="anPhPick" class="checks"></div></div>
+    <div class="grid5" style="margin-top:8px">
+      <div class="field" style="grid-column:span 2"><label>要保人姓名</label><input type="text" id="an_ph_name"></div>
+      <div class="field" style="grid-column:span 2"><label>要保人身分證字號</label><input type="text" id="an_ph_idno"></div>
+    </div>
     <div class="grid5">
       <div class="field"><label>性別</label>
         <div class="checks" style="margin-top:2px">
@@ -1921,7 +1926,7 @@ function pickInsured(i){
   // 書面分析模式：點了被保人就代表「不是同要保人」，自動取消勾選並展開欄位
   if(typeof docType!=='undefined'&&docType==='書面分析'){
     const same=document.getElementById('an-ins_same');
-    const isSelf=!!(currentCase&&currentCase.ph&&currentCase.ph.name===x.name);
+    const isSelf=gv('an_ph_idno')&&x.idno?gv('an_ph_idno')===x.idno:gv('an_ph_name')===x.name;
     if(same)same.classList.toggle('on',isSelf);
     if(typeof anSync==='function')anSync();
   }
@@ -3116,12 +3121,54 @@ function onAnalysisSearch(v){
   const ph=document.getElementById('ph_name');
   if(ph)ph.value=c?c.ph.name:v;
   onNameInput();
+  anBuildPolicyholders(c);
+  const people=c?[c.ph,...(c.insureds||[])].filter(Boolean):[];
+  const person=people.find(p=>p.name===v);
+  anSetPolicyholder(person||{name:v});
   if(c){
     const i=(_insList||[]).findIndex(x=>x.name===v);
     if(i>=0)pickInsured(i);
   }
+  const same=document.getElementById('an-ins_same');
+  if(same)same.classList.add('on');
+  anSync();
   anBuildPlates();
   anShowFound(c);
+  if(typeof saveDraft==='function')saveDraft();
+}
+let _anPhList=[];
+function anBuildPolicyholders(c){
+  const box=document.getElementById('anPhPick'),wrap=document.getElementById('anPhPickWrap');
+  _anPhList=[];
+  if(c)[c.ph,...(c.insureds||[])].filter(p=>p&&p.name).forEach(p=>{
+    if(!_anPhList.some(x=>p.idno&&x.idno?p.idno===x.idno:p.name===x.name))_anPhList.push(p);
+  });
+  if(box)box.innerHTML=_anPhList.map((p,i)=>`<label class="chk" onclick="anPickPolicyholder(${i})">${esc(p.name)}</label>`).join('');
+  if(wrap)wrap.style.display=_anPhList.length?'':'none';
+}
+function anPickPolicyholder(i){
+  const p=_anPhList[i];if(!p)return;
+  anSetPolicyholder(p);
+  // 選擇要保人後預設本人投保，仍可另點被保人改為不同人。
+  const same=document.getElementById('an-ins_same');if(same)same.classList.add('on');
+  anSync();
+}
+function anSetPolicyholder(p){
+  setVal('an_ph_name',p.name||'');setVal('an_ph_idno',p.idno||'');
+  const b=splitRoc(p.birth);
+  setVal('an_ph_birth',b.y?b.y+'/'+b.m+'/'+b.d:'');
+  setVal('an_ph_job','');
+  const sex=String(p.sex||p.gender||'');
+  const id=String(p.idno||'').toUpperCase();
+  const male=sex==='男'||sex==='M'||(!sex&&/^[A-Z]1/.test(id));
+  const female=sex==='女'||sex==='F'||(!sex&&/^[A-Z]2/.test(id));
+  ['an-ph_m','an-ph_f'].forEach((key,i)=>{
+    const el=document.getElementById(key);if(el)el.classList.toggle('on',i===0?male:female);
+  });
+  const box=document.getElementById('anPhPick');
+  if(box)[...box.children].forEach((el,i)=>{
+    const x=_anPhList[i];el.classList.toggle('on',!!x&&(p.idno&&x.idno?p.idno===x.idno:p.name===x.name));
+  });
   if(typeof saveDraft==='function')saveDraft();
 }
 function anShowFound(c){
@@ -3131,7 +3178,7 @@ function anShowFound(c){
   const ins=(c.insureds||[]).filter(x=>x.name).map(x=>esc(x.name)).join('、')||'—';
   const veh=((c.vehicles||[]).filter(x=>x&&x.plate).map(x=>esc(x.plate)).join('、'))||'—';
   box.style.display='block';
-  box.innerHTML='<b>要保人：</b>'+esc(p.name||'')+(p.idno?'（'+esc(p.idno)+'）':'')
+  box.innerHTML='<b>原客戶要保人：</b>'+esc(p.name||'')+(p.idno?'（'+esc(p.idno)+'）':'')
     +'<br><b>被保人：</b>'+ins+'<br><b>車牌：</b>'+veh;
 }
 /* 書面分析：列出此客戶的車牌，點一下帶入 */
@@ -3186,7 +3233,7 @@ function anPeriodOneYear(){
 }
 /* 生日：要保人欄已有 ph_by/ph_bm/ph_bd 就組起來 */
 function anBirth(pre){
-  const t=gv('an_'+pre+'_birth');if(t)return t;
+  const t=gv('an_'+pre+'_birth');if(pre==='ph'||t)return t;
   const y=(pre==='ph')?gv('ph_by'):gv('cl_ins_by');
   const m=(pre==='ph')?gv('ph_bm'):gv('cl_ins_bm');
   const d=(pre==='ph')?gv('ph_bd'):gv('cl_ins_bd');
@@ -3195,14 +3242,14 @@ function anBirth(pre){
 function buildAnalysis(kind){
   const h=mkStamp(window.AN_COORDS),{T,V}=h,F=h.F;
   // 要保人
-  T('ph_name',gv('ph_name'));T('ph_idno',gv('ph_idno'));
+  T('ph_name',gv('an_ph_name'));T('ph_idno',gv('an_ph_idno'));
   T('ph_birth',anBirth('ph'));T('ph_job',gv('an_ph_job'));
   V('ph_sex_m',isOn('an-ph_m'));V('ph_sex_f',isOn('an-ph_f'));
   // 被保險人
   const same=isOn('an-ins_same');
   V('chk_ins_same',same);
   if(same){
-    T('ins_name',gv('ph_name'));T('ins_idno',gv('ph_idno'));
+    T('ins_name',gv('an_ph_name'));T('ins_idno',gv('an_ph_idno'));
     T('ins_birth',anBirth('ph'));T('ins_job',gv('an_ph_job'));
     V('ins_sex_m',isOn('an-ph_m'));V('ins_sex_f',isOn('an-ph_f'));
   }else{
@@ -3937,8 +3984,8 @@ function validateRequired(){
   if(docType==='書面分析'){
     const m=[];
     if(!selectedInsurers().length)m.push('尚未選擇險種（旅平險／醫療險／車險）');
-    if(!gv('ph_name'))m.push('要保人姓名尚未填寫');
-    if(!gv('ph_idno'))m.push('要保人身分證字號尚未填寫');
+    if(!gv('an_ph_name'))m.push('要保人姓名尚未填寫');
+    if(!gv('an_ph_idno'))m.push('要保人身分證字號尚未填寫');
     if(!isOn('an-ph_m')&&!isOn('an-ph_f'))m.push('要保人性別尚未選擇');
     if(!isOn('an-ins_same')&&!gv('an_ins_name')&&!gv('ins_name'))m.push('被保險人姓名尚未填寫');
     const _s=selectedInsurers();
@@ -4097,7 +4144,7 @@ async function downloadPDFs(){
     const ok=confirm('⚠️ 以下必勾／必填欄位還沒完成：\n\n・'+miss.join('\n・')+'\n\n確定要「仍然下載」嗎？（建議先補齊再印）');
     if(!ok){msg.textContent='已暫停，請補齊上述必勾欄位後再下載。';return;}
   }
-  const nm=gv('ph_name')||'授權書';
+  const nm=(docType==='書面分析'?gv('an_ph_name'):gv('ph_name'))||'授權書';
   document.getElementById('dlBtn').disabled=true;
   try{
     for(const form of jobs){

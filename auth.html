@@ -69,7 +69,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640h</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640i</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -1555,13 +1555,35 @@ function gatherPolicies(){
   }
   return out;
 }
+// 只合併已知公司及號碼相同的顯示列，保留原始客戶資料與各關聯人。
+function policyIdentity(p){
+  const insurer=String(p.insurer||'').replace(/\s+/g,'').toUpperCase();
+  const no=String(p.no||'').replace(/\s+/g,'').toUpperCase();
+  return insurer&&no?JSON.stringify([matchInsurer(insurer)||insurer,no]):'';
+}
+function uniquePolicyRows(rows){
+  const seen=new Set();
+  return rows.filter(p=>{
+    const key=policyIdentity(p);if(!key)return true;
+    if(seen.has(key))return false;seen.add(key);return true;
+  });
+}
 function allStoredPolicies(){
-  const out=[];
+  const out=[],byPolicy=new Map();
   (cases||[]).forEach(c=>{
     const client=(c.ph&&c.ph.name)||'';
     (c.insureds||[]).forEach(ins=>{
       (ins.policies||[]).forEach(p=>{
-        if(p&&(p.insurer||p.no))out.push({client,who:ins.name||'',insurer:p.insurer||'',no:p.no||'',cat:p.cat||''});
+        if(!p||!(p.insurer||p.no))return;
+        const row={client,who:ins.name||'',insurer:p.insurer||'',no:p.no||'',cat:p.cat||''};
+        const key=policyIdentity(row),prior=key&&byPolicy.get(key);
+        if(prior){
+          ['client','who','cat'].forEach(k=>{
+            const parts=prior[k]?prior[k].split('、'):[];
+            if(row[k]&&!parts.includes(row[k]))parts.push(row[k]);
+            prior[k]=parts.join('、');
+          });
+        }else{out.push(row);if(key)byPolicy.set(key,row);}
       });
     });
   });
@@ -1605,6 +1627,7 @@ function addAllFilteredPolicies(){
   readPolicyRows();
   policyRows=policyRows.filter(r=>r.insurer||r.no);
   _polFiltered.forEach(p=>policyRows.push({insurer:p.insurer||'',no:p.no||''}));
+  policyRows=uniquePolicyRows(policyRows);
   if(!policyRows.length)policyRows=[{insurer:'',no:''}];
   renderPolicyRows();updatePolicyRouting();if(typeof saveDraft==='function')saveDraft();
   closePolicyPicker();
@@ -1665,6 +1688,7 @@ function addRowFromPolicy(insurer,no){
   readPolicyRows();
   policyRows=policyRows.filter(r=>r.insurer||r.no);
   policyRows.push({insurer:insurer||'',no:no||''});
+  policyRows=uniquePolicyRows(policyRows);
   renderPolicyRows();updatePolicyRouting();if(typeof saveDraft==='function')saveDraft();
 }
 // 取某保險公司要套印的保單號碼（依列中的保險公司名稱分流）

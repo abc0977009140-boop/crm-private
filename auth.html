@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640n</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640o</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -539,7 +539,7 @@
       <div class="field full"><label>地址</label><input type="text" id="ph_addr" placeholder="通訊地址"></div>
       <div class="field"><label>被保險人姓名 <span class="req" id="reqInsName" style="display:none">必填✱</span> <span class="hint">（與要保人不同時填；可點下方被保人）</span></label><input type="text" id="ins_name" list="insuredNames" placeholder="搜尋舊客戶，或自行輸入" autocomplete="off" oninput="onDocumentPersonSearch('ins',this.value)"><datalist id="insuredNames"></datalist><button type="button" onclick="documentInsuredSame()" style="margin-top:6px">同要保人（本人投保）</button><div id="personResults_ins" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div></div>
       <div class="field"><label>被保險人身分證 <span class="req" id="reqInsId" style="display:none">必填✱</span> <span class="hint">（部分表單用）</span></label><input type="text" id="ins_idno" placeholder="A123456789"></div>
-      <div class="field full" id="insPickWrap" style="display:none"><label>此客戶的被保人 <span class="hint">（點一下帶入）</span></label><div id="insPick" class="checks"></div></div>
+      <div class="field full" id="insPickWrap" style="display:none"><label><span class="insuredPickTitle">此客戶的被保險人</span></label><div id="insPick" class="checks"></div></div>
     </div>
   </div>
 
@@ -763,7 +763,7 @@
     <div class="card">
       <div class="grouplabel">選擇客戶 <span class="hint">（搜尋客戶，帶入被保人與保單）</span></div>
       <div class="field full"><input type="text" id="cl_search" list="claimNames" placeholder="輸入要保人或被保人姓名" oninput="onClaimSearch(this.value)"><datalist id="claimNames"></datalist></div>
-      <div class="field full" id="clInsPickWrap" style="display:none;margin-top:8px"><label>此客戶的被保人 <span class="hint">（點一下帶入）</span></label><div id="clInsPick" class="checks"></div></div>
+      <div class="field full" id="clInsPickWrap" style="display:none;margin-top:8px"><label><span class="insuredPickTitle">此客戶的被保險人</span></label><div id="clInsPick" class="checks"></div></div>
       <div id="claimHist" style="display:none;background:#f4f8f6;border:1px solid #d6e5df;border-radius:10px;padding:10px 12px;margin-top:10px"></div>
 
       <div class="grouplabel" style="margin-top:14px">被保險人（點上方被保人自動帶）</div>
@@ -1995,21 +1995,17 @@ function buildInsuredPick(){
   // 選了保險公司時，只留下「在這家有保單」的被保人
   const sel=(typeof selectedInsurers==='function')?selectedInsurers():[];
   const insKey=sel.length===1?sel[0]:'';
-  const filtered=insKey?all.filter(x=>insuredHasInsurer(x,insKey)):all;
-  const useFiltered=!!insKey&&filtered.length>0;
-  _insList=useFiltered?filtered:all;
-  const hiddenCount=useFiltered?(all.length-filtered.length):0;
-  if(dl)dl.innerHTML=_insList.map(x=>`<option value="${esc(x.name)}"></option>`).join('');
-  if(!box||!wrap)return;
-  if(!_insList.length){wrap.style.display='none';box.innerHTML='';return;}
-  wrap.style.display='block';
-  let html=_insList.map((x,i)=>`<label class="chk" onclick="pickInsured(${i})">${esc(x.name)}${x.rel?'（'+esc(x.rel)+'）':''}</label>`).join('');
-  if(hiddenCount>0)html+=`<span class="shint" style="align-self:center;margin-left:6px">（另有 ${hiddenCount} 位在這家沒保單，已隱藏）</span>`;
-  box.innerHTML=html;
-  const cbox=document.getElementById('clInsPick'),cwrap=document.getElementById('clInsPickWrap');
-  if(cbox&&cwrap){
-    if(_insList.length){cwrap.style.display='block';cbox.innerHTML=html;}
-    else{cwrap.style.display='none';cbox.innerHTML='';}
+  _insList=all.filter(person=>insuredHasInsurer(person,insKey));
+  if(dl)dl.innerHTML=_insList.map(person=>`<option value="${esc(person.name)}"></option>`).join('');
+  const show=!!currentCase&&(!!insKey||_insList.length>0);
+  const title=insKey?INS_LABELS[insKey]+'｜此客戶有保單的被保險人':'此客戶的被保險人';
+  const options=_insList.map((person,index)=>`<label class="chk" onclick="pickInsured(${index})">${esc(person.name)}${person.rel?'（'+esc(person.rel)+'）':''}</label>`).join('');
+  const content=options||'<span class="hint">此客戶在這家保險公司沒有已登錄的被保險人保單。</span>';
+  for(const [container,list] of [[wrap,box],[document.getElementById('clInsPickWrap'),document.getElementById('clInsPick')]]){
+    if(!container||!list)continue;
+    container.style.display=show?'block':'none';
+    container.querySelector('.insuredPickTitle').textContent=title+(options?'（點一下帶入）':'');
+    list.innerHTML=show?content:'';
   }
 
 }
@@ -3152,10 +3148,11 @@ function renderAuthHist(){
     box.innerHTML='<div style="font-size:12.5px;color:#8a8378">💳 這位客戶目前<b>沒有信用卡授權變更紀錄</b>。</div>';
     return;
   }
-  const rows=list.map(r=>`<div style="border-top:1px dashed #e3ddd0;padding:6px 0;font-size:12.5px;color:#4a4a4a;line-height:1.6">
+  const latestDate=list[0].date;
+  const rows=list.filter(record=>record.date===latestDate).map(r=>`<div style="border-top:1px dashed #e3ddd0;padding:6px 0;font-size:12.5px;color:#4a4a4a;line-height:1.6">
     <b style="color:#245A5E">${esc(r.date)}</b>　卡末四碼 <b>${esc(r.last4)}</b>${r.brand?'（'+esc(r.brand)+'）':''}　有效 ${esc(r.exp)}<br>
     <span style="color:#8a8378">授權人：${esc(r.authorizer||'—')}${r.insured?'　·　被保人：'+esc(r.insured):''}${r.policies?'　·　保單：'+esc(r.policies):''}${r.insurers?'　·　'+esc(r.insurers):''}</span></div>`).join('');
-  box.innerHTML='<div style="font-size:13px;font-weight:700;color:#A8842E;margin-bottom:2px">💳 信用卡授權變更紀錄（近 '+list.length+' 筆）</div>'+rows;
+  box.innerHTML='<div style="font-size:13px;font-weight:700;color:#A8842E;margin-bottom:2px">💳 信用卡授權變更紀錄（最近變更日）</div>'+rows;
 }
 
 /* 台灣人壽 · 信用卡付款授權書（2025.03，新版 pt 座標） */

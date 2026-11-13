@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640o</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640p</span></h1>
   </div>
   <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
 
@@ -1590,11 +1590,11 @@ function onNameInput(){
   const v=document.getElementById('ph_name').value.trim();
   const c=cases.find(x=>x.ph&&x.ph.name===v);
   currentCase=c||null;
+  setVal('ins_name','');setVal('ins_idno','');
+  insuredPickContext=null;
   buildAuthPick();
-  buildInsuredPick();
   buildPolicyPicker();
   updateDocVisibility();   // 依此客戶的保單只顯示有的保險公司；清空客戶則還原全部
-  setVal('ins_name','');setVal('ins_idno','');   // 換客戶清空被保人，重新選
   if(!c){
     // 沒對應到客戶：清掉上一個客戶殘留的要保人與保單
     ['ph_idno','ph_by','ph_bm','ph_bd','ph_phone','ph_addr'].forEach(id=>setVal(id,''));
@@ -1921,7 +1921,7 @@ function pickDocumentPerson(role,i){
     const identity=x=>p.idno&&x.idno?String(p.idno)===String(x.idno):p.name===x.name;
     currentCase=(cases||[]).find(c=>c.ph&&identity(c.ph))||(cases||[]).find(c=>(c.insureds||[]).some(identity))||null;
     const b=splitRoc(p.birth);setVal('ph_idno',p.idno);setVal('ph_by',b.y);setVal('ph_bm',b.m);setVal('ph_bd',b.d);setVal('ph_phone',p.phone||p.tel);setVal('ph_addr',p.addr);
-    buildAuthPick();buildInsuredPick();buildPolicyPicker();updateDocVisibility();
+    buildAuthPick();buildPolicyPicker();updateDocVisibility();
   }
   closeDocumentPersonSearch(role);if(typeof saveDraft==='function')saveDraft();
 }
@@ -1983,6 +1983,7 @@ function clearAuFields(){
 }
 /* ----- 被保人快速點選（同一要保人可能多位被保人）----- */
 let _insList=[];
+let insuredPickContext=null;
 function insuredHasInsurer(ins,insKey){
   if(!insKey)return true;
   return (ins.policies||[]).some(p=>matchInsurer(p.insurer)===insKey);
@@ -1997,7 +1998,21 @@ function buildInsuredPick(){
   const insKey=sel.length===1?sel[0]:'';
   _insList=all.filter(person=>insuredHasInsurer(person,insKey));
   if(dl)dl.innerHTML=_insList.map(person=>`<option value="${esc(person.name)}"></option>`).join('');
-  const show=!!currentCase&&(!!insKey||_insList.length>0);
+  const autoMode=docType==='授權書';
+  const nextContext=autoMode&&currentCase&&insKey?{customer:currentCase,insurer:insKey}:null;
+  if(nextContext?.customer!==insuredPickContext?.customer||nextContext?.insurer!==insuredPickContext?.insurer){
+    insuredPickContext=nextContext;
+    if(autoMode){
+      if(nextContext&&_insList.length===1){
+        pickInsured(0);
+        _docAutoNames.ins=gv('ins_name');
+      }else{
+        setVal('ins_name','');setVal('ins_idno','');
+        _docAutoNames.ins='';
+      }
+    }
+  }
+  const show=!!currentCase&&(!!insKey||_insList.length>0)&&!(nextContext&&_insList.length===1);
   const title=insKey?INS_LABELS[insKey]+'｜此客戶有保單的被保險人':'此客戶的被保險人';
   const options=_insList.map((person,index)=>`<label class="chk" onclick="pickInsured(${index})">${esc(person.name)}${person.rel?'（'+esc(person.rel)+'）':''}</label>`).join('');
   const content=options||'<span class="hint">此客戶在這家保險公司沒有已登錄的被保險人保單。</span>';

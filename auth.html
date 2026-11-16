@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640w</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640x</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -509,8 +509,8 @@
   <div class="card" id="tmChgCard" style="display:none">
     <div class="grouplabel">要變更什麼？ <span class="req">必填✱</span> <span class="hint">（可複選，會印在同一張批改申請書上）</span></div>
     <div class="checks">
-      <label class="chk on" id="tmchg-card" onclick="clToggle(this);tmChgSync()">信用卡批改</label>
-      <label class="chk" id="tmchg-addr" onclick="clToggle(this);tmChgSync()">住所地址變更</label>
+      <label class="chk" id="tmchg-card" onclick="clToggle(this);tmChgSync()">信用卡批改</label>
+      <label class="chk on" id="tmchg-addr" onclick="clToggle(this);tmChgSync()">住所地址變更</label>
     </div>
     <div id="tmAddrBlock" style="display:none">
       <div class="grouplabel" style="margin-top:14px">要改誰的地址？</div>
@@ -531,7 +531,7 @@
 
   <div class="step" id="phStep"><div class="num">5</div><div class="t">要保人</div></div>
   <div class="card" id="phCard">
-    <div class="grid">
+    <div class="grid" id="authSameFields">
       <div class="field full">
         <label>要保人與授權人是否相同</label>
         <div class="seg">
@@ -1825,10 +1825,9 @@ function setSame(on){
   phSameAuth=on;
   document.getElementById('seg-same').classList.toggle('on',on);
   document.getElementById('seg-diff').classList.toggle('on',!on);
-  const claim=(typeof docType!=='undefined'&&docType==='理賠申請');
-  const an=(typeof docType!=='undefined'&&docType==='書面分析');
-  document.getElementById('authStep').style.display=(claim||an||on)?'none':'flex';
-  document.getElementById('authCard').style.display=(claim||an||on)?'none':'block';
+  const visible=typeof docType!=='undefined'&&showPaymentFields()&&!on;
+  document.getElementById('authStep').style.display=visible?'flex':'none';
+  document.getElementById('authCard').style.display=visible?'block':'none';
 }
 function pickNatl(who,which){
   const tw=document.getElementById(who+'-natl-tw'), other=document.getElementById(who+'-natl-other');
@@ -3378,6 +3377,7 @@ function tmChgSync(){
   if(b)b.style.display=tmChgOn('addr')?'block':'none';
   const n=document.getElementById('tmCardNote');
   if(n)n.style.display=tmChgOn('card')?'block':'none';
+  applyDocMode();
   if(typeof saveDraft==='function')saveDraft();
 }
 /* ===== 新光人壽 契約變更（聯絡資料修改） ===== */
@@ -4355,6 +4355,9 @@ function updatePayFormNote(){
 }
 
 /* 書面分析模式：隱藏用不到的步驟（授權人／繳費別／保單號碼／扣款方式） */
+function showPaymentFields(){
+  return docType==='授權書'||(docType==='契約變更'&&insChecked('tokiomarine')&&tmChgOn('card'));
+}
 function applyDocMode(){
   const an=(docType==='書面分析');
   const pair=(el,show)=>{
@@ -4363,9 +4366,11 @@ function applyDocMode(){
     const st=el.previousElementSibling;
     if(st&&st.classList&&st.classList.contains('step'))st.style.display=show?'':'none';
   };
-  pair(document.getElementById('authCard'),!an);
-  pair(document.getElementById('feeCard'),!an);
-  const pay=document.getElementById('payCard');if(pay)pay.style.display=(an||docType==='理賠申請')?'none':'';
+  const payment=showPaymentFields();
+  setSame(phSameAuth);
+  pair(document.getElementById('feeCard'),docType==='授權書');
+  document.getElementById('authSameFields').style.display=payment?'':'none';
+  document.getElementById('payCard').style.display=payment?'':'none';
   const lb=document.getElementById('dlSumLabel');
   if(lb)lb.innerHTML=an?'將套印以下分析書 <span class="hint">（在最上方第 4 步調整）</span>'
                       :'將套印以下保險公司 <span class="hint">（在最上方第 4 步調整）</span>';

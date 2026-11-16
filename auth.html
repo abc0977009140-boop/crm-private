@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640r</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640s</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -159,7 +159,7 @@
     </div>
 
     <div class="grouplabel" style="margin-top:14px">變更後地址 <span class="req">必填✱</span> <span class="hint">（整串貼上，會自動拆成表格各欄）</span></div>
-    <div class="field"><input id="sk_addr_full" placeholder="例：600 嘉義市西區民生北路100號5樓" oninput="skParseAddr()"></div>
+    <div class="field"><input id="sk_addr_full" type="text" style="width:100%;box-sizing:border-box" placeholder="例：600 嘉義市西區民生北路100號5樓" oninput="skParseAddr()"><div id="skAddressRemainder" class="note-warn" aria-live="polite"></div></div>
     <div class="grid5" style="margin-top:8px">
       <div class="field"><label>郵遞區號</label><input id="sk_a_zip" inputmode="numeric" maxlength="6"></div>
       <div class="field"><label>縣市</label><input id="sk_a_city"></div>
@@ -3392,7 +3392,7 @@ function skChgToday(){
 }
 /* 整串地址自動拆成表格各欄（表單已印縣市/路街等字，所以拆出來不含該字） */
 function skParseAddr(){
-  let t=String(gv('sk_addr_full')||'').replace(/\s+/g,'').replace(/台/g,'臺');
+  let t=String(gv('sk_addr_full')||'').normalize('NFKC').replace(/\s+/g,'').replace(/台/g,'臺');
   const put=(id,v)=>setVal('sk_a_'+id,v||'');
   const zip=(t.match(/^(\d{3,6})/)||[])[1]||'';
   if(zip)t=t.slice(zip.length);
@@ -3400,17 +3400,21 @@ function skParseAddr(){
   const city=grab(/^(.{1,4}?)[縣市]/);
   const dist=grab(/^(.{1,5}?)[鄉鎮市區]/);
   const vil=grab(/^(.{1,5}?)[村里]/);
-  const road=grab(/^(.{1,8}?)(?:大道|[路街])/);
+  const neighborhood=grab(/^([\d零〇一二三四五六七八九十百]+鄰)/);
+  const road=grab(/^([^號巷弄樓室]+?)(?:大道|[路街])/);
+  const locality=road?'':grab(/^([^\d零〇一二三四五六七八九十百號巷弄樓室]+)(?=[\d零〇一二三四五六七八九十百]+(?:巷|弄|號))/);
   const sec=grab(/^(.{1,3}?)段/);
   const lane=grab(/^([\d一二三四五六七八九十]{1,5}?)巷/);
   const alley=grab(/^([\d一二三四五六七八九十]{1,5}?)弄/);
-  const no=grab(/^([\d\-之]{1,8}?)號/);
+  let no=grab(/^([\d\-之]+)號/);
+  if(no)no+=grab(/^(之\d+)/);
   const floor=grab(/^([\d一二三四五六七八九十]{1,4}?)樓/);
   let room=grab(/^之([\d一二三四五六七八九十A-Za-z]{1,4})/);   // 12樓之5 → 樓12 室5
   if(!room)room=grab(/^([\d一二三四五六七八九十]{1,4}?)室/);
-  put('zip',zip);put('city',city);put('dist',dist);put('vil',vil);put('road',road);
+  put('zip',zip);put('city',city);put('dist',dist);put('vil',vil);put('road',neighborhood+(road||locality));
   put('sec',sec);put('lane',lane);put('alley',alley);put('no',no);put('floor',floor);
   put('room',room||(t.length<=4?t:''));
+  document.getElementById('skAddressRemainder').textContent=t&&!(room===''&&t.length<=4)?'未自動拆入：'+t+'。請核對下方欄位。':'';
   if(typeof saveDraft==='function')saveDraft();
 }
 /* 欄位窄 → 自動縮字，避免壓到表單上印的「縣市」「路街」等字 */

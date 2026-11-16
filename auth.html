@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640v</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640w</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -1539,7 +1539,7 @@
   <!-- 套印：下載 -->
   <div class="step"><div class="num">9</div><div class="t">套印下載</div></div>
   <div class="card">
-    <div class="grouplabel" id="dlSumLabel">將套印以下保險公司 <span class="hint">（在最上方第 1 步調整）</span></div>
+    <div class="grouplabel" id="dlSumLabel">將套印以下保險公司 <span class="hint">（在最上方第 4 步調整）</span></div>
     <div id="dlInsSummary" style="font-size:14px;color:var(--teal-deep);margin-bottom:4px"></div>
     <button id="dlBtn" onclick="downloadPDFs()" style="margin-top:14px;width:100%;background:var(--teal);color:#fff;border:none;
       padding:14px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">⬇ 下載授權書 PDF</button>
@@ -1938,6 +1938,7 @@ function pickDocumentPerson(role,i){
     currentCase=(cases||[]).find(c=>c.ph&&identity(c.ph))||(cases||[]).find(c=>(c.insureds||[]).some(identity))||null;
     const b=splitRoc(p.birth);setVal('ph_idno',p.idno);setVal('ph_by',b.y);setVal('ph_bm',b.m);setVal('ph_bd',b.d);setVal('ph_phone',p.phone||p.tel);setVal('ph_addr',p.addr);
     buildAuthPick();buildPolicyPicker();updateDocVisibility();
+    syncWorkflowCustomer(p);
   }
   closeDocumentPersonSearch(role);if(typeof saveDraft==='function')saveDraft();
 }
@@ -4049,7 +4050,24 @@ const INSURER_FORMS={taiwanlife:['twlife_cc','twlife_acct','twlife_claim','twlif
 
 let docType='授權書';
 function insurerHasDoc(insKey,doc){return (INSURER_FORMS[insKey]||[]).some(fk=>FORMS[fk]&&FORMS[fk].doc===doc);}
+function syncWorkflowCustomer(person){
+  if(!person?.name)return;
+  if(docType==='書面分析'){
+    anSetPolicyholder(person);
+    anShowFound(currentCase);
+    anSync();
+  }else if(docType==='理賠申請'){
+    setVal('cl_ins_name',person.name);
+    setVal('cl_ins_id',person.idno);
+    const birth=splitRoc(person.birth);
+    setVal('cl_ins_by',birth.y);
+    setVal('cl_ins_bm',birth.m);
+    setVal('cl_ins_bd',birth.d);
+    setVal('cl_ins_mobile',person.phone||person.tel);
+  }
+}
 function selectDoc(t){
+  const previous=docType;
   docType=t;
   document.getElementById('doc-auth').classList.toggle('on',t==='授權書');
   document.getElementById('doc-change').classList.toggle('on',t==='契約變更');
@@ -4068,8 +4086,6 @@ function selectDoc(t){
   const payCard=document.getElementById('payCard');if(payCard)payCard.style.display=(t==='理賠申請'||t==='書面分析')?'none':'block';
   // 理賠模式：隱藏要保人、授權人兩整區（理賠只需被保人資料）
   const claim=(t==='理賠申請');
-  const showCustomer=t==='授權書'||t==='契約變更';
-  for(const id of ['customerStep','customerCard'])document.getElementById(id).style.display=showCustomer?'':'none';
   ['phStep','phCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   ['feeStep','feeCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   if(claim){
@@ -4078,6 +4094,7 @@ function selectDoc(t){
     setSame(typeof phSameAuth==='undefined'?false:phSameAuth);   // 依相同/不同還原授權區
   }
   updateDocVisibility();
+  if(previous!==t&&currentCase)syncWorkflowCustomer(currentCase.ph);
   if(typeof updatePayFormNote==='function')updatePayFormNote();
   if(typeof renderAuthHist==='function')renderAuthHist();
   if(typeof renderClaimHist==='function')renderClaimHist();
@@ -4349,11 +4366,9 @@ function applyDocMode(){
   pair(document.getElementById('authCard'),!an);
   pair(document.getElementById('feeCard'),!an);
   const pay=document.getElementById('payCard');if(pay)pay.style.display=(an||docType==='理賠申請')?'none':'';
-  const pr=document.getElementById('policyRows');
-  if(pr)pair(pr.closest('.card'),!an);
   const lb=document.getElementById('dlSumLabel');
-  if(lb)lb.innerHTML=an?'將套印以下分析書 <span class="hint">（在最上方第 1 步調整）</span>'
-                      :'將套印以下保險公司 <span class="hint">（在最上方第 1 步調整）</span>';
+  if(lb)lb.innerHTML=an?'將套印以下分析書 <span class="hint">（在最上方第 4 步調整）</span>'
+                      :'將套印以下保險公司 <span class="hint">（在最上方第 4 步調整）</span>';
 }
 function applyInsurerVisibility(){
   const sel=selectedInsurers();
@@ -4408,7 +4423,7 @@ function applyInsurerVisibility(){
   const insHint=document.getElementById('insHint');
   if(insHint)insHint.textContent=sel.length?('已選：'+names.join('、')+'　→ 下面只顯示這幾家要填的欄位'):'⚠ 尚未選任何保險公司，請先勾選一家以上。';
   const sum=document.getElementById('dlInsSummary');
-  if(sum)sum.textContent=sel.length?names.join('、'):'（尚未選擇，請回第 1 步勾選）';
+  if(sum)sum.textContent=sel.length?names.join('、'):'（尚未選擇，請回第 4 步勾選）';
 }
 function toggleIns(el){
   if(el.checked){  // 單選：一次只能選一家，選新的就取消其他家
@@ -4770,16 +4785,12 @@ try{
   const s=location.search;
   if(/[?&]doc=claim/.test(s)){
     selectDoc('理賠申請');
-    ['doc-auth','doc-change','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else if(/[?&]doc=change/.test(s)){
     selectDoc('契約變更');
-    ['doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else if(/[?&]doc=analysis/.test(s)){
     selectDoc('書面分析');
-    ['doc-auth','doc-change','doc-claim'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else{
     selectDoc('授權書');
-    ['doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }
 }catch(e){}
 try{if(typeof applyDocMode==='function')applyDocMode();}catch(e){}

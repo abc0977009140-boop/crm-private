@@ -64,7 +64,7 @@
 
   #beneChangeMode[hidden], #beneChangeFields [hidden], #beneChangeFields[hidden] {display:none;}
   .bene-change-active :is(#twChgCard,#skChgCard,#tcChgCard,#fbChgCard,#tmChgCard,
-    #authStep,#authCard,#feeStep,#feeCard,#payCard,#beneLegacyPolicyStep,#beneLegacyPolicyCard,
+    #authStep,#authCard,#feeStep,#feeCard,#payCard,
     #phCard > .grid:first-child) {display:none !important;}
 </style>
 </head>
@@ -74,19 +74,44 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640q</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640r</span></h1>
   </div>
-  <p class="sub">先選保險公司，下面只會顯示該家要填的欄位 · 邊填邊存</p>
+  <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
-  <div class="step"><div class="num">1</div><div class="t">選擇保險公司</div></div>
+  <div class="step" id="customerStep"><div class="num">1</div><div class="t">選擇客戶</div></div>
+  <div class="card" id="customerCard">
+      <div class="field">
+        <label for="ph_name">客戶姓名 <span class="req">必填✱</span> <span class="hint">（可搜尋客戶）</span></label>
+        <input type="text" id="ph_name" list="clientNames" placeholder="輸入或搜尋客戶姓名" oninput="onSharedPolicyholderSearch(this.value)">
+        <datalist id="clientNames"></datalist><div id="personResults_ph" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div>
+        <div id="authHist" style="display:none;background:#faf7f0;border:1px solid #ece3d0;border-radius:10px;padding:10px 12px;margin-top:8px"></div>
+
+      </div>
+  </div>
+  <div class="step" id="documentStep"><div class="num">2</div><div class="t">選擇文件類別</div></div>
   <div class="card">
-    <div class="grouplabel">文件類別</div>
     <div class="checks" style="margin-bottom:12px">
       <label class="chk on" id="doc-auth" onclick="selectDoc('授權書')">授權書</label>
       <label class="chk" id="doc-change" onclick="selectDoc('契約變更')">契約變更</label>
       <label class="chk" id="doc-claim" onclick="selectDoc('理賠申請')">理賠申請</label>
       <label class="chk" id="doc-analysis" onclick="selectDoc('書面分析')">書面分析</label>
     </div>
+  </div>
+  <div class="step" id="beneLegacyPolicyStep"><div class="num">3</div><div class="t">選擇保單</div></div>
+  <div class="card" id="beneLegacyPolicyCard">
+    <div id="polRoute" style="display:none;margin-bottom:10px;font-size:13px;line-height:1.7;background:#f3f7f5;border:1px solid #d7e6e0;border-radius:10px;padding:10px 12px;"></div>
+    <div id="policyRows"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button type="button" onclick="addPolicyRow()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;">＋ 新增保單</button>
+      <button type="button" onclick="openPolicyPicker()" style="background:#245A5E;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">選擇已存客戶保單</button>
+    </div>
+    <div style="font-size:12px;color:#888;margin-top:8px;line-height:1.6;">每筆＝<b>保險公司名稱＋保單號碼</b>。產生授權書時會依保險公司自動分流：台灣人壽只印台壽、全球只印全球、遠雄只印遠雄，不會互相混到。</div>
+    <datalist id="insurerNames"><option value="第一金人壽"></option><option value="台灣人壽"></option><option value="全球人壽"></option><option value="遠雄人壽"></option><option value="凱基人壽"></option><option value="新光人壽"></option><option value="新安東京海上"></option><option value="保誠人壽"></option></datalist>
+    <datalist id="clientPolicyNos"></datalist>
+  </div>
+
+  <div class="step" id="insurerStep"><div class="num">4</div><div class="t">選擇保險公司</div></div>
+  <div class="card">
     <div class="grouplabel" id="insPrompt">要做哪一家的授權書？ <span class="hint">（一次一家；選了才會顯示該家欄位）</span></div>
     <div class="checks">
       <label class="chk on" id="ins-taiwanlife"><input type="checkbox" checked onchange="toggleIns(this)">台灣人壽</label>
@@ -504,7 +529,7 @@
   </div>
 
 
-  <div class="step" id="phStep"><div class="num">2</div><div class="t">要保人</div></div>
+  <div class="step" id="phStep"><div class="num">5</div><div class="t">要保人</div></div>
   <div class="card" id="phCard">
     <div class="grid">
       <div class="field full">
@@ -516,13 +541,7 @@
       </div>
     </div>
     <div class="grid g2" style="margin-top:14px">
-      <div class="field">
-        <label>姓名 <span class="req">必填✱</span> <span class="hint">（可搜尋客戶）</span></label>
-        <input type="text" id="ph_name" list="clientNames" placeholder="輸入或搜尋客戶姓名" oninput="onSharedPolicyholderSearch(this.value)">
-        <datalist id="clientNames"></datalist><div id="personResults_ph" style="display:none;max-height:240px;overflow:auto;margin-top:6px" aria-live="polite"></div>
-        <div id="authHist" style="display:none;background:#faf7f0;border:1px solid #ece3d0;border-radius:10px;padding:10px 12px;margin-top:8px"></div>
 
-      </div>
       <div class="field"><label>身分證字號</label><input type="text" id="ph_idno" placeholder="A123456789"></div>
       <div class="field full">
         <label>國籍</label>
@@ -577,7 +596,7 @@
     </div>
   </div>
 
-  <div id="authStep" class="step" style="display:none"><div class="num">3</div><div class="t">授權人</div></div>
+  <div id="authStep" class="step" style="display:none"><div class="num">6</div><div class="t">授權人</div></div>
   <div id="authCard" class="card">
     <div style="margin-bottom:16px">
       <div class="grouplabel">授權人為誰 <span class="req">必填✱</span> <span class="hint">（擇一，依授權書勾選欄）</span></div>
@@ -643,7 +662,7 @@
   </div>
 
   <!-- 第 4 格：繳費別 -->
-  <div class="step" id="feeStep"><div class="num">4</div><div class="t">繳費別</div></div>
+  <div class="step" id="feeStep"><div class="num">7</div><div class="t">繳費別</div></div>
   <div class="card" id="feeCard">
     <div data-ins="globallife kgi">
       <div class="grouplabel">保單幣別 <span class="req" id="reqCur" style="display:none">必填✱</span> <span class="hint">（全球/凱基用·擇一）</span></div>
@@ -661,22 +680,9 @@
   </div>
 
   <!-- 第 5 格：保單號碼 -->
-  <div class="step" id="beneLegacyPolicyStep"><div class="num">5</div><div class="t">保單號碼</div></div>
-  <div class="card" id="beneLegacyPolicyCard">
-    <div id="polRoute" style="display:none;margin-bottom:10px;font-size:13px;line-height:1.7;background:#f3f7f5;border:1px solid #d7e6e0;border-radius:10px;padding:10px 12px;"></div>
-    <div id="policyRows"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-      <button type="button" onclick="addPolicyRow()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;">＋ 新增保單</button>
-      <button type="button" onclick="openPolicyPicker()" style="background:#245A5E;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">📋 一鍵帶入客戶保單</button>
-    </div>
-    <div style="font-size:12px;color:#888;margin-top:8px;line-height:1.6;">每筆＝<b>保險公司名稱＋保單號碼</b>。產生授權書時會依保險公司自動分流：台灣人壽只印台壽、全球只印全球、遠雄只印遠雄，不會互相混到。</div>
-    <datalist id="insurerNames"><option value="第一金人壽"></option><option value="台灣人壽"></option><option value="全球人壽"></option><option value="遠雄人壽"></option><option value="凱基人壽"></option><option value="新光人壽"></option><option value="新安東京海上"></option><option value="保誠人壽"></option></datalist>
-    <datalist id="clientPolicyNos"></datalist>
-  </div>
-
   <!-- 第 6 格：扣款方式 -->
   <div id="payCard">
-  <div class="step"><div class="num">6</div><div class="t">扣款方式</div></div>
+  <div class="step"><div class="num">8</div><div class="t">扣款方式</div></div>
   <div class="card">
     <div class="grouplabel">選擇扣款方式 <span class="req">必填✱</span> <span class="hint">（選哪個就填哪個；資料三家通用）</span></div>
     <div class="checks">
@@ -1531,7 +1537,7 @@
         </div><!-- /scChangeFields -->
 
   <!-- 套印：下載 -->
-  <div class="step"><div class="num">7</div><div class="t">套印下載</div></div>
+  <div class="step"><div class="num">9</div><div class="t">套印下載</div></div>
   <div class="card">
     <div class="grouplabel" id="dlSumLabel">將套印以下保險公司 <span class="hint">（在最上方第 1 步調整）</span></div>
     <div id="dlInsSummary" style="font-size:14px;color:var(--teal-deep);margin-bottom:4px"></div>
@@ -3905,6 +3911,8 @@ function syncBeneChange(selected){
   document.getElementById('beneChangePolicies').innerHTML=[...numbers].map(no=>'<option value="'+esc(no)+'"></option>').join('');
   document.getElementById('pcaAddressFields').hidden=!config.address||mode.value==='death';
   document.getElementById('benePeopleFields').hidden=!!config.address&&mode.value==='address';
+  const selectedPolicies=[...new Set(polNosForInsurer(key))];
+  if(selectedPolicies.length===1&&!gv('bene_change_policy'))setVal('bene_change_policy',selectedPolicies[0]);
   syncBeneAllocation();
 }
 function beneChangePerson(index){
@@ -4056,6 +4064,8 @@ function selectDoc(t){
   const payCard=document.getElementById('payCard');if(payCard)payCard.style.display=(t==='理賠申請'||t==='書面分析')?'none':'block';
   // 理賠模式：隱藏要保人、授權人兩整區（理賠只需被保人資料）
   const claim=(t==='理賠申請');
+  const showCustomer=t==='授權書'||t==='契約變更';
+  for(const id of ['customerStep','customerCard'])document.getElementById(id).style.display=showCustomer?'':'none';
   ['phStep','phCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   ['feeStep','feeCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=(claim||t==='書面分析')?'none':'';});
   if(claim){
@@ -4759,13 +4769,13 @@ try{
     ['doc-auth','doc-change','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else if(/[?&]doc=change/.test(s)){
     selectDoc('契約變更');
-    ['doc-auth','doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+    ['doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else if(/[?&]doc=analysis/.test(s)){
     selectDoc('書面分析');
     ['doc-auth','doc-change','doc-claim'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }else{
     selectDoc('授權書');
-    ['doc-change','doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+    ['doc-claim','doc-analysis'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   }
 }catch(e){}
 try{if(typeof applyDocMode==='function')applyDocMode();}catch(e){}

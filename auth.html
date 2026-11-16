@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640t</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640u</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -4031,7 +4031,7 @@ const FORMS={
   fubon_change:{doc:'契約變更',key:'fubon_change', label:'富邦產險', sub:'個人保險批改（地址）', build:buildFubonChange, pages:[0], pay:['*']},
   twlife_change:{doc:'契約變更',key:'twlife_change', label:'台灣人壽', sub:'聯絡資訊變更', build:buildTwlifeChange, pages:[0], pay:['*']},
   globallife_change:{doc:'契約變更',key:'globallife_change', label:'全球人壽', sub:'個人資料異動（地址）', build:buildGloballifeChange, pages:[0], pay:['*']},
-  shinkong_change:{doc:'契約變更',key:'shinkong_change', label:'新光人壽', sub:'聯絡資料變更', build:buildShinkongChange, pages:[0], pay:['*']},
+  shinkong_change:{doc:'契約變更',key:'bene_sk', label:'新光人壽', sub:'聯絡資料變更', build:buildShinkongChange, pages:[0], pay:['*']},
   southchina_pre:{doc:'契約變更',key:'southchina_pre',label:'華南產險',sub:'新契約承保前內容變更申請書 113.11',build:buildSouthChinaPreChange,pages:[0],pay:['*']},
   southchina_change:{doc:'契約變更',key:'southchina_change', label:'華南產險', sub:'契約內容變更申請書', build:buildSouthChinaChange, pages:[0], pay:['*']},
   farglory_claim:{doc:'理賠申請',key:'farglory_claim', label:'遠雄人壽', sub:'保險金申請書', build:buildFarglolyClaim, pages:[0], pay:['*']},

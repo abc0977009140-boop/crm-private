@@ -777,12 +777,12 @@
   <div id="claimCard" style="display:none">
     <div class="step"><div class="num">6</div><div class="t">理賠填寫</div></div>
     <div class="card">
-      <div class="grouplabel">選擇客戶 <span class="hint">（搜尋客戶，帶入被保人與保單）</span></div>
+      
       <div class="field full"><input type="text" id="cl_search" list="claimNames" placeholder="輸入要保人或被保人姓名" oninput="onClaimSearch(this.value)"><datalist id="claimNames"></datalist></div>
       <div class="field full" id="clInsPickWrap" style="display:none;margin-top:8px"><label><span class="insuredPickTitle">此客戶的被保險人</span></label><div id="clInsPick" class="checks"></div></div>
       <div id="claimHist" style="display:none;background:#f4f8f6;border:1px solid #d6e5df;border-radius:10px;padding:10px 12px;margin-top:10px"></div>
 
-      <div class="grouplabel" style="margin-top:14px">被保險人（點上方被保人自動帶）</div>
+      <div class="grouplabel" style="margin-top:14px">被保險人（依選擇的保單帶入）</div>
       <div class="grid2">
         <div class="field"><label>姓名</label><input id="cl_ins_name" placeholder="被保人姓名"></div>
         <div class="field"><label>身分證統一編號</label><input id="cl_ins_id" placeholder="A123456789"></div>

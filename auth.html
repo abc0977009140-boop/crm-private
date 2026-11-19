@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641e</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641g</span></h1>
   </div>
   <p class="sub">搜尋客戶並選擇保單，再選文件類別與保險公司</p>
 
@@ -93,7 +93,7 @@
   <div class="step" id="beneLegacyPolicyStep"><div class="num">1</div><div class="t">選擇保單</div></div>
   <div class="card" id="beneLegacyPolicyCard">
     <div class="field"><label for="inlinePolicySearch">搜尋客戶保單</label>
-      <input type="search" id="inlinePolicySearch" placeholder="輸入要保人、被保險人姓名或保單號碼" oninput="renderInlinePolicySearch()" style="display:block;width:100%;min-width:0;min-height:58px;padding:14px 16px;font:inherit;font-size:18px;border:1px solid var(--line);border-radius:12px;box-sizing:border-box">
+      <input type="search" id="inlinePolicySearch" placeholder="輸入客戶姓名" oninput="inlineSelectedCustomerName='';renderInlinePolicySearch()" style="display:block;width:100%;min-width:0;min-height:58px;padding:14px 16px;font:inherit;font-size:18px;border:1px solid var(--line);border-radius:12px;box-sizing:border-box">
     </div>
     <div id="inlinePolicyResults" style="max-height:360px;overflow:auto;margin:8px 0" aria-live="polite"></div>
     <div id="polRoute" style="display:none;margin-bottom:10px;font-size:13px;line-height:1.7;background:#f3f7f5;border:1px solid #d7e6e0;border-radius:10px;padding:10px 12px;"></div>
@@ -1737,7 +1737,7 @@ function renderPolPicker(){
     const supported=insKey&&insurerHasDoc(insKey,docType);
     const noTpl=supported?'':'　<span style="color:#999;font-size:12px">（沒套印資料）</span>';
     const main=esc(p.insurer||'（未填公司）')+(p.no?'　<b>'+esc(p.no)+'</b>':'')+(p.cat?'　<span style="color:#C8464B;font-size:13px">'+esc(p.cat)+'</span>':'')+noTpl;
-    const sub=esc(p.client||'')+(p.who?' · 被保人：'+esc(p.who):'');
+    const sub='要保人：'+esc(p.client||'未登錄')+(p.who?' · 被保險人：'+esc(p.who):'');
     return '<button type="button" class="pp-row" data-no="'+esc(p.no)+'" data-insurer="'+esc(p.insurer)+'" onclick="insertPolicyNo(this)" '
       +'style="width:100%;text-align:left;background:#fff;border:1px solid #e5e0d5;border-radius:10px;padding:11px 12px;margin-top:8px;cursor:pointer;font-family:inherit;">'
       +'<div style="font-size:14px;color:#232323">'+main+'</div>'
@@ -1746,10 +1746,20 @@ function renderPolPicker(){
   }).join('');
 }
 function insertPolicyNo(btn){
-  addRowFromPolicy(btn.getAttribute('data-insurer')||'', btn.getAttribute('data-no')||'');
+  const policy={insurer:btn.getAttribute('data-insurer')||'',no:btn.getAttribute('data-no')||''};
+  const matches=storedPolicyRelations([policy]);
+  const named=matches.filter(match=>match.customer.ph?.name===inlineSelectedCustomerName||match.insured.name===inlineSelectedCustomerName);
+  const candidates=named.length?named:matches;
+  if(candidates.length===1){
+    inlinePolicyMatches=candidates;
+    chooseInlinePolicy(0);
+  }else{
+    addRowFromPolicy(policy.insurer,policy.no);
+  }
   btn.style.background='#e8f3ee';
-  const act=btn.querySelector('.pp-act'); if(act)act.textContent='✓ 已加入';
+  const act=btn.querySelector('.pp-act');if(act)act.textContent='✓ 已加入';
 }
+
 function addAllFilteredPolicies(){
   if(!_polFiltered.length)return;
   readPolicyRows();
@@ -1828,6 +1838,19 @@ function polNosForInsurer(insKey){
   return out;
 }
 let inlinePolicyMatches=[];
+let inlineSelectedCustomerName='';
+let inlineCustomerNameMatches=[];
+function chooseInlineCustomerName(index){
+  const name=inlineCustomerNameMatches[index];
+  if(!name)return;
+  inlineSelectedCustomerName=name;
+  setVal('inlinePolicySearch',name);
+  document.getElementById('inlinePolicyResults').innerHTML='';
+  openPolicyPicker();
+  setVal('polPickerSearch',name);
+  renderPolPicker();
+}
+
 function storedPolicyRelations(rows){
   const keys=new Set(rows.map(policyIdentity).filter(Boolean));
   const matches=[];
@@ -1851,29 +1874,17 @@ function renderInlinePolicySearch(){
   const box=document.getElementById('inlinePolicyResults');
   inlinePolicyMatches=[];
   if(!query){box.innerHTML='';return;}
-  const seen=new Set();
-  for(const customer of cases||[]){
-    for(const insured of customer.insureds||[]){
-      for(const policy of insured.policies||[]){
-        if(!policy.no)continue;
-        const text=[customer.ph?.name,insured.name,policy.insurer,policy.no].filter(Boolean).join(' ').toLocaleLowerCase();
-        if(!text.includes(query))continue;
-        const key=JSON.stringify([customer.ph?.idno||customer.ph?.name,insured.idno||insured.name,policyIdentity(policy)]);
-        if(seen.has(key))continue;
-        seen.add(key);
-        inlinePolicyMatches.push({customer,insured,policy});
-      }
-    }
-  }
-  if(!inlinePolicyMatches.length){
-    box.innerHTML='<div class="hint">查無符合的已存保單。</div>';
+  {
+    inlineCustomerNameMatches=[...new Set((cases||[]).flatMap(customer=>
+      [customer.ph?.name,...(customer.insureds||[]).map(person=>person.name)])
+      .filter(name=>name&&name.toLocaleLowerCase().includes(query)))];
+    box.innerHTML=inlineCustomerNameMatches.length
+      ?inlineCustomerNameMatches.map((name,index)=>'<button type="button" onclick="chooseInlineCustomerName('+index+')" style="display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff;color:var(--teal-deep);font:inherit;margin-top:8px;cursor:pointer">'+esc(name)+'</button>').join('')
+      :'<div class="hint">查無符合的客戶姓名。</div>';
     return;
   }
-  box.innerHTML=inlinePolicyMatches.map(({customer,insured,policy},index)=>
-    '<button type="button" onclick="chooseInlinePolicy('+index+')" style="display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;color:var(--teal-deep);font:inherit;margin-top:8px;cursor:pointer">'+
-    '<b>'+esc(policy.insurer||'未填公司')+'　'+esc(policy.no)+'</b>'+
-    '<div style="margin-top:4px">要保人　'+esc(customer.ph?.name||'未登錄')+'　｜　被保險人　'+esc(insured.name||'未登錄')+'</div></button>').join('');
 }
+
 function chooseInlinePolicy(index){
   const match=inlinePolicyMatches[index];if(!match)return;
   const {customer,insured,policy}=match;
@@ -2072,6 +2083,7 @@ function pickDocumentPerson(role,i){
     renderCustomerPeopleSummary();
     syncWorkflowCustomer(p);
     setVal('inlinePolicySearch',p.name);
+    inlineSelectedCustomerName='';
     renderInlinePolicySearch();
   }
   closeDocumentPersonSearch(role);if(typeof saveDraft==='function')saveDraft();

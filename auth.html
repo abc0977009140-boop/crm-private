@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640z</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641a</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -2171,11 +2171,32 @@ function loadClaimAcctForCase(){
   let all={};try{all=JSON.parse(localStorage.getItem(CLAIM_ACCT_KEY))||{};}catch(e){}
   if(all[key])fillClaimAcct(all[key]);
 }
+function claimPolicyholder(){
+  readPolicyRows();
+  const insurer=claimInsurerKey();
+  const keys=new Set(policyRows.filter(row=>row.no&&matchInsurer(row.insurer)===insurer).map(policyIdentity).filter(Boolean));
+  const owners=(cases||[]).filter(customer=>(customer.insureds||[]).some(person=>
+    (person.policies||[]).some(policy=>keys.has(policyIdentity(policy)))));
+  if(owners.includes(currentCase))return currentCase.ph;
+  const unique=new Map();
+  for(const owner of owners){
+    if(owner.ph?.name)unique.set(owner.ph.idno||owner.ph.name,owner.ph);
+  }
+  if(unique.size===1)return [...unique.values()][0];
+  if(!keys.size)return currentCase?.ph;
+  return null;
+}
 function payeeFrom(who){
-  if(who==='ph'&&currentCase&&currentCase.ph){setVal('cl_acct_name',currentCase.ph.name||'');setVal('cl_payee_id',currentCase.ph.idno||'');}
-  else if(who==='ins'){setVal('cl_acct_name',gv('cl_ins_name'));setVal('cl_payee_id',gv('cl_ins_id'));}
+  const person=who==='ph'?claimPolicyholder():{name:gv('cl_ins_name'),idno:gv('cl_ins_id')};
+  setVal('cl_acct_name',person?.name||'');
+  setVal('cl_payee_id',person?.idno||'');
+  if(!person?.name){
+    document.getElementById('dlMsg').textContent='請確認所選保單的'+(who==='ph'?'要保人':'被保險人')+'資料，再帶入受款人。';
+    return;
+  }
   saveClaimAcct();if(typeof saveDraft==='function')saveDraft();
 }
+
 function pickInsured(i){
   const x=_insList[i];if(!x)return;
   setVal('ins_name',x.name||'');

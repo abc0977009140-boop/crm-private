@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640x</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0640y</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -1811,6 +1811,38 @@ function updatePolicyRouting(){
   if(unmatched.length)html+='<div style="color:#c0392b;margin-top:'+(rows?'6px':'0')+'">⚠ 認不出保險公司：'+unmatched.map(r=>esc(r.insurer||'(空白)')+(r.no?' '+esc(r.no):'')).join('、')+'<br><span style="font-size:12px">請寫成「台灣人壽 / 全球人壽 / 遠雄人壽」才會套印。</span></div>';
   box.innerHTML=html;
   box.style.display=html?'block':'none';
+  syncPolicyInsured();
+}
+function syncPolicyInsured(){
+  const claim=docType==='理賠申請';
+  const search=document.getElementById('cl_search').closest('.field');
+  search.style.display=claim?'none':'';
+  if(!claim)return;
+  const selected=selectedInsurers();
+  const policies=policyRows.filter(row=>row.no&&(!selected.length||selected.includes(matchInsurer(row.insurer))));
+  const people=[];
+  const seen=new Set();
+  for(const customer of cases||[]){
+    for(const person of customer.insureds||[]){
+      if(!person.name||!(person.policies||[]).some(policy=>policies.some(row=>policyIdentity(policy)===policyIdentity(row))))continue;
+      const key=person.idno||person.name+'|'+(person.birth||'');
+      if(seen.has(key))continue;
+      seen.add(key);people.push(person);
+    }
+  }
+  _insList=people;
+  const wrap=document.getElementById('clInsPickWrap');
+  const box=document.getElementById('clInsPick');
+  wrap.style.display=people.length>1?'block':'none';
+  box.innerHTML=people.map((person,index)=>'<button type="button" class="chk" onclick="pickInsured('+index+')">'+esc(person.name)+'</button>').join('');
+  if(people.length===1){
+    pickInsured(0);
+  }else{
+    const current=people.find(person=>person.idno&&person.idno===gv('cl_ins_id'));
+    if(!current){
+      for(const id of ['ins_name','ins_idno','cl_ins_name','cl_ins_id','cl_ins_by','cl_ins_bm','cl_ins_bd'])setVal(id,'');
+    }
+  }
 }
 function onAuPick(){
   const v=document.getElementById('au_pick').value;
@@ -4057,13 +4089,7 @@ function syncWorkflowCustomer(person){
     anShowFound(currentCase);
     anSync();
   }else if(docType==='理賠申請'){
-    setVal('cl_ins_name',person.name);
-    setVal('cl_ins_id',person.idno);
-    const birth=splitRoc(person.birth);
-    setVal('cl_ins_by',birth.y);
-    setVal('cl_ins_bm',birth.m);
-    setVal('cl_ins_bd',birth.d);
-    setVal('cl_ins_mobile',person.phone||person.tel);
+    syncPolicyInsured();
   }
 }
 function selectDoc(t){
@@ -4094,7 +4120,7 @@ function selectDoc(t){
     setSame(typeof phSameAuth==='undefined'?false:phSameAuth);   // 依相同/不同還原授權區
   }
   updateDocVisibility();
-  if(previous!==t&&currentCase)syncWorkflowCustomer(currentCase.ph);
+  if(previous!==t&&currentCase&&t!=='理賠申請')syncWorkflowCustomer(currentCase.ph);
   if(typeof updatePayFormNote==='function')updatePayFormNote();
   if(typeof renderAuthHist==='function')renderAuthHist();
   if(typeof renderClaimHist==='function')renderClaimHist();
@@ -4392,7 +4418,8 @@ function applyInsurerVisibility(){
   if(fbc){fbc.style.display=(docType==='契約變更'&&has('fubon'))?'':'none';if(typeof fbChgSync==='function')fbChgSync();}
   const twc=document.getElementById('twChgCard');
   if(twc){twc.style.display=(docType==='契約變更'&&has('taiwanlife'))?'':'none';if(typeof twChgSync==='function')twChgSync();}
-  if(typeof buildInsuredPick==='function')buildInsuredPick();   // 換公司 → 被保人清單只留這家有保單的
+  if(typeof buildInsuredPick==='function')buildInsuredPick();
+  syncPolicyInsured();   // 換公司 → 被保人清單只留這家有保單的
   // 華南產險契約變更：選了才顯示整區
   const sc=document.getElementById('scChangeFields');
   if(sc){

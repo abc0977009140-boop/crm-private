@@ -74,11 +74,11 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641d</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641e</span></h1>
   </div>
-  <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
+  <p class="sub">搜尋客戶並選擇保單，再選文件類別與保險公司</p>
 
-  <div class="step" id="customerStep"><div class="num">1</div><div class="t">選擇客戶</div></div>
+<div hidden style="display:none">  <div class="step" id="customerStep"><div class="num">1</div><div class="t">選擇客戶</div></div>
   <div class="card" id="customerCard">
       <div class="field">
         <label for="ph_name">客戶姓名 <span class="req">必填✱</span> <span class="hint">（可搜尋客戶）</span></label>
@@ -89,19 +89,11 @@
 
       </div>
   </div>
-  <div class="step" id="documentStep"><div class="num">2</div><div class="t">選擇文件類別</div></div>
-  <div class="card">
-    <div class="checks" style="margin-bottom:12px">
-      <label class="chk on" id="doc-auth" onclick="selectDoc('授權書')">授權書</label>
-      <label class="chk" id="doc-change" onclick="selectDoc('契約變更')">契約變更</label>
-      <label class="chk" id="doc-claim" onclick="selectDoc('理賠申請')">理賠申請</label>
-      <label class="chk" id="doc-analysis" onclick="selectDoc('書面分析')">書面分析</label>
-    </div>
-  </div>
-  <div class="step" id="beneLegacyPolicyStep"><div class="num">3</div><div class="t">選擇保單</div></div>
+</div>
+  <div class="step" id="beneLegacyPolicyStep"><div class="num">1</div><div class="t">選擇保單</div></div>
   <div class="card" id="beneLegacyPolicyCard">
     <div class="field"><label for="inlinePolicySearch">搜尋客戶保單</label>
-      <input type="search" id="inlinePolicySearch" placeholder="輸入要保人、被保險人姓名或保單號碼" oninput="renderInlinePolicySearch()" style="width:100%;box-sizing:border-box">
+      <input type="search" id="inlinePolicySearch" placeholder="輸入要保人、被保險人姓名或保單號碼" oninput="renderInlinePolicySearch()" style="display:block;width:100%;min-width:0;min-height:58px;padding:14px 16px;font:inherit;font-size:18px;border:1px solid var(--line);border-radius:12px;box-sizing:border-box">
     </div>
     <div id="inlinePolicyResults" style="max-height:360px;overflow:auto;margin:8px 0" aria-live="polite"></div>
     <div id="polRoute" style="display:none;margin-bottom:10px;font-size:13px;line-height:1.7;background:#f3f7f5;border:1px solid #d7e6e0;border-radius:10px;padding:10px 12px;"></div>
@@ -115,7 +107,16 @@
     <datalist id="clientPolicyNos"></datalist>
   </div>
 
-  <div class="step" id="insurerStep"><div class="num">4</div><div class="t">選擇保險公司</div></div>
+  <div class="step" id="documentStep"><div class="num">2</div><div class="t">選擇文件類別</div></div>
+  <div class="card">
+    <div class="checks" style="margin-bottom:12px">
+      <label class="chk on" id="doc-auth" onclick="selectDoc('授權書')">授權書</label>
+      <label class="chk" id="doc-change" onclick="selectDoc('契約變更')">契約變更</label>
+      <label class="chk" id="doc-claim" onclick="selectDoc('理賠申請')">理賠申請</label>
+      <label class="chk" id="doc-analysis" onclick="selectDoc('書面分析')">書面分析</label>
+    </div>
+  </div>
+  <div class="step" id="insurerStep"><div class="num">3</div><div class="t">選擇保險公司</div></div>
   <div class="card">
     <div class="grouplabel" id="insPrompt">要做哪一家的授權書？ <span class="hint">（一次一家；選了才會顯示該家欄位）</span></div>
     <div class="checks">
@@ -1546,7 +1547,7 @@
   <!-- 套印：下載 -->
   <div class="step"><div class="num">9</div><div class="t">套印下載</div></div>
   <div class="card">
-    <div class="grouplabel" id="dlSumLabel">將套印以下保險公司 <span class="hint">（在最上方第 4 步調整）</span></div>
+    <div class="grouplabel" id="dlSumLabel">將套印以下保險公司 <span class="hint">（在最上方第 3 步調整）</span></div>
     <div id="dlInsSummary" style="font-size:14px;color:var(--teal-deep);margin-bottom:4px"></div>
     <button id="dlBtn" onclick="downloadPDFs()" style="margin-top:14px;width:100%;background:var(--teal);color:#fff;border:none;
       padding:14px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">⬇ 下載授權書 PDF</button>
@@ -4536,8 +4537,8 @@ function applyDocMode(){
   document.getElementById('authSameFields').style.display=payment?'':'none';
   document.getElementById('payCard').style.display=payment?'':'none';
   const lb=document.getElementById('dlSumLabel');
-  if(lb)lb.innerHTML=an?'將套印以下分析書 <span class="hint">（在最上方第 4 步調整）</span>'
-                      :'將套印以下保險公司 <span class="hint">（在最上方第 4 步調整）</span>';
+  if(lb)lb.innerHTML=an?'將套印以下分析書 <span class="hint">（在最上方第 3 步調整）</span>'
+                      :'將套印以下保險公司 <span class="hint">（在最上方第 3 步調整）</span>';
 }
 function applyInsurerVisibility(){
   const sel=selectedInsurers();
@@ -4593,7 +4594,7 @@ function applyInsurerVisibility(){
   const insHint=document.getElementById('insHint');
   if(insHint)insHint.textContent=sel.length?('已選：'+names.join('、')+'　→ 下面只顯示這幾家要填的欄位'):'⚠ 尚未選任何保險公司，請先勾選一家以上。';
   const sum=document.getElementById('dlInsSummary');
-  if(sum)sum.textContent=sel.length?names.join('、'):'（尚未選擇，請回第 4 步勾選）';
+  if(sum)sum.textContent=sel.length?names.join('、'):'（尚未選擇，請回第 3 步勾選）';
 }
 function toggleIns(el){
   if(el.checked){  // 單選：一次只能選一家，選新的就取消其他家

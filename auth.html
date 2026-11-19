@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641a</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641b</span></h1>
   </div>
   <p class="sub">先選客戶，再選文件類別、保單與保險公司</p>
 
@@ -826,6 +826,8 @@
         <span class="hint">受款人帶入：</span>
         <label class="chk" onclick="payeeFrom('ph')" style="padding:5px 12px">要保人</label>
         <label class="chk" onclick="payeeFrom('ins')" style="padding:5px 12px">被保人</label>
+        <button type="button" class="chk" onclick="restorePreviousClaimAccount()">帶入上次理賠帳戶</button>
+        <span id="previousClaimAccountMessage" role="status" class="hint"></span>
         <span class="hint">（帳號打一次會自動記住此客戶）</span>
       </div>
       <div class="grid2">
@@ -2149,7 +2151,7 @@ function saveClaimAcct(){
   const key=caseKey();if(!key)return;
   const a=claimAcctCanonical();
   const empty=!a.name&&!a.bank&&!a.acct&&!a.id;
-  if(empty)return;   // 空的不存也不刪，避免載入客戶時把已存帳號清掉
+  if(empty||!a.acct)return;   // 填寫姓名時，保留上次完整帳戶供帶入
   let all={};try{all=JSON.parse(localStorage.getItem(CLAIM_ACCT_KEY))||{};}catch(e){}
   all[key]=a;
   try{localStorage.setItem(CLAIM_ACCT_KEY,JSON.stringify(all));}catch(e){}
@@ -2165,6 +2167,21 @@ function fillClaimAcct(a){
   setVal('fg_acct_name',a.name||'');setVal('fg_bank_name',a.bank||'');setVal('fg_branch_name',a.branch||'');setVal('fg_acct_no',a.acct||'');
   setVal('ht_acct_name',a.name||'');setVal('ht_bank_name',a.bank||'');setVal('ht_branch_name',a.branch||'');setVal('ht_acct_no',a.acct||'');
   setVal('tn_acct_name',a.name||'');setVal('tn_bank_name',a.bank||'');setVal('tn_branch_name',a.branch||'');setVal('tn_acct_no',a.acct||'');
+}
+function restorePreviousClaimAccount(){
+  const key=caseKey();
+  let accounts={};
+  try{accounts=JSON.parse(localStorage.getItem(CLAIM_ACCT_KEY))||{};}catch(e){}
+  const account=accounts[key];
+  const message=document.getElementById('previousClaimAccountMessage');
+  if(!account?.acct){
+    message.textContent='這位客戶尚無可帶入的完整帳號，請填寫本次帳戶。';
+    return;
+  }
+  fillClaimAcct(account);
+  setVal('fb_acct_id',account.id||'');
+  setVal('ht_payee_id',account.id||'');
+  message.textContent='已帶入上次儲存的理賠帳戶（末五碼 '+String(account.acct).slice(-5)+'）。';
 }
 function loadClaimAcctForCase(){
   const key=caseKey();if(!key)return;

@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641h</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641i</span></h1>
   </div>
   <p class="sub">先選文件類別，再搜尋客戶保單與選擇保險公司</p>
 
@@ -4070,13 +4070,13 @@ function syncBeneChange(selected){
       ['birth','出生日期（民國年/月/日）'],['nation','國籍'],['addr','聯絡地址'],['phone','聯絡電話'],
       ['order','順位','order'],['percent','比例 %','percent']];
     const config=BENE_CHANGE_FORMS[key];
-    document.getElementById('beneChangeRows').innerHTML=(config?.rows||[]).map((_,index)=>{
+    document.getElementById('beneChangeRows').innerHTML=(config?Array.from({length:3}):[]).map((_,index)=>{
       const prefix='bene_change_'+index+'_';
-      return '<div class="card"><div class="grouplabel">受益人 '+(index+1)+'</div><div class="grid2">'+
+      return '<div class="card" data-bene-row="'+index+'"'+(index?' hidden':'')+'><div class="grouplabel">受益人 '+(index+1)+'</div><button type="button" onclick="fillBeneficiaryFromPolicyholder('+index+')" style="margin:8px 0 14px;padding:10px 16px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--teal);font:inherit;cursor:pointer">帶入要保人資料</button><div class="grid2">'+
         fields.map(([name,label,share])=>'<div class="field"'+(share?' data-share="'+share+'" hidden':'')+
           '><label for="'+prefix+name+'">'+label+'</label><input id="'+prefix+name+'"'+
           (share?' inputmode="numeric"':'')+'></div>').join('')+'</div></div>';
-    }).join('');
+    }).join('')+'<button type="button" id="addBeneficiaryButton" onclick="addBeneficiaryRow()" style="padding:12px 18px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--teal);font:inherit;cursor:pointer">＋ 增加受益人</button>';
     document.getElementById('beneChangeReason').hidden=!['taiwanlife','pca'].includes(key);
   }
   if(currentCase!==beneChangeCase){
@@ -4091,7 +4091,7 @@ function syncBeneChange(selected){
   document.getElementById('beneChangeFields').hidden=!config;
   document.body.classList.toggle('bene-change-active',!!config);
   if(!config)return;
-  document.getElementById('beneFormTitle').textContent=config.title+'（最多 '+config.rows.length+' 位）'+
+  document.getElementById('beneFormTitle').textContent=config.title+'（最多 3 位；原表單不足時另下載續份）'+
     (key==='shinkong'?'。此底稿適用原新光人壽商品。':'');
   const numbers=new Set(gatherPolicies()
     .filter(p=>p.no&&matchInsurer(p.insurer)===key&&(key!=='fubon'||/富邦人[壽寿]/.test(p.insurer)))
@@ -4102,6 +4102,19 @@ function syncBeneChange(selected){
   const selectedPolicies=[...new Set(polNosForInsurer(key))];
   if(selectedPolicies.length===1&&!gv('bene_change_policy'))setVal('bene_change_policy',selectedPolicies[0]);
   syncBeneAllocation();
+}
+function addBeneficiaryRow(){
+  const rows=[...document.querySelectorAll('#beneChangeRows [data-bene-row]')];
+  const next=rows.find(row=>row.hidden);if(next)next.hidden=false;
+  const button=document.getElementById('addBeneficiaryButton');if(button)button.hidden=rows.every(row=>!row.hidden);
+}
+function fillBeneficiaryFromPolicyholder(index){
+  const p=(typeof claimPolicyholder==='function'?claimPolicyholder():null)||currentCase?.ph||{};
+  const prefix='bene_change_'+index+'_';
+  const birth=[gv('ph_by'),gv('ph_bm'),gv('ph_bd')].filter(Boolean).join('/');
+  const values={name:gv('ph_name')||p.name||'',id:gv('ph_idno')||p.idno||'',birth:birth||p.birth||'',nation:gv('ph_natl_txt')||p.nation||'中華民國',addr:gv('ph_addr')||p.addr||'',phone:gv('ph_phone')||p.phone||p.tel||''};
+  Object.entries(values).forEach(([field,value])=>setVal(prefix+field,value));
+  if(typeof saveDraft==='function')saveDraft();
 }
 function beneChangePerson(index){
   const prefix='bene_change_'+index+'_';
@@ -4125,7 +4138,7 @@ function validateBeneChange(config){
     if(addresses.some(id=>gv(id+'_zip')&&(!gv(id)||!/^\d{3}$/.test(gv(id+'_zip')))))issues.push('郵遞區號請填寫三碼，並填寫對應的新地址');
   }
   if(config.address&&gv('bene_change_mode')==='address')return issues;
-  const rows=config.rows.map((_,i)=>beneChangePerson(i)).filter(row=>Object.values(row).some(Boolean));
+  const rows=Array.from({length:3},(_,i)=>beneChangePerson(i)).filter(row=>Object.values(row).some(Boolean));
   if(!rows.length)issues.push('請填寫至少一位受益人');
   if(rows.some(row=>!row.name||!row.rel))issues.push('請填寫受益人姓名及與被保險人的關係');
   if(beneChangeInsurer==='taiwanlife'&&rows.some(row=>row.birth&&!/^\d{1,3}\/\d{1,2}\/\d{1,2}$/.test(row.birth))){
@@ -4142,7 +4155,7 @@ function validateBeneChange(config){
   }
   return issues;
 }
-function buildBeneChange(config){
+function buildBeneChange(config,start=0){
   const stamps=[];
   const add=(coord,value,page=0,kind='text')=>{
     if(coord&&value)stamps.push({...coord,v:String(value),page,kind});
@@ -4170,7 +4183,7 @@ function buildBeneChange(config){
   add(m.reason,gv('bene_change_reason'),config.page);
   const foreign=[];
   config.rows.forEach((coords,index)=>{
-    const row=beneChangePerson(index);
+    const row=beneChangePerson(index+start);
     if(!row.name)return;
     const put=(field,value,kind='text')=>add(coords[field],value,config.page,kind);
     for(const field of ['name','id','rel','birth','addr','phone'])put(field,row[field]);
@@ -4850,8 +4863,8 @@ async function downloadPDFs(){
   const bene=activeBeneChange();
   if(bene){
     const issues=validateBeneChange(bene);
-    if(issues.length){msg.textContent=issues.join('。');return;}
     jobs.push({key:'bene_'+bene.file,label:INS_LABELS[beneChangeInsurer],sub:bene.address?'契約內容變更':'受益人變更',build:()=>buildBeneChange(bene)});
+    if(bene.rows.length<3&&beneChangePerson(2).name)jobs.push({key:'bene_'+bene.file,label:INS_LABELS[beneChangeInsurer],sub:'受益人變更_續份',build:()=>buildBeneChange(bene,bene.rows.length)});
   }
   if(!bene)sel.forEach(insKey=>{
     (INSURER_FORMS[insKey]||[]).forEach(fk=>{
@@ -4861,11 +4874,8 @@ async function downloadPDFs(){
   });
   if(!jobs.length){msg.textContent=(docType==='理賠申請')?'請先選台灣人壽（理賠目前支援台灣人壽）。':'目前扣款方式沒有對應的授權書可印。';return;}
   if(docType==='授權書'&&sel.includes('firstlife')&&polNosForInsurer('firstlife').length>4){msg.textContent='第一金每份最多 4 張保單，請移除多餘保單後分次下載。';return;}
-  const miss=bene?[]:validateRequired();
-  if(miss.length){
-    const ok=confirm('⚠️ 以下必勾／必填欄位還沒完成：\n\n・'+miss.join('\n・')+'\n\n確定要「仍然下載」嗎？（建議先補齊再印）');
-    if(!ok){msg.textContent='已暫停，請補齊上述必勾欄位後再下載。';return;}
-  }
+  const miss=bene?validateBeneChange(bene):validateRequired();
+  if(miss.length)window.alert('提醒：以下資料尚未完成，關閉提醒後仍會下載，未填欄位將保留空白：\n\n・'+miss.join('\n・'));
   const nm=(docType==='書面分析'?gv('an_ph_name'):gv('ph_name'))||'授權書';
   document.getElementById('dlBtn').disabled=true;
   try{

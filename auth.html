@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641j</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641k</span></h1>
   </div>
   <p class="sub">先選文件類別，再搜尋客戶保單與選擇保險公司</p>
 
@@ -1417,77 +1417,14 @@
 
           <div class="grouplabel" style="margin-top:14px">要變更什麼？ <span class="req">必填✱</span> <span class="hint">（勾了才會出現該區欄位，也才會套印）</span></div>
           <div class="checks">
-            <label class="chk" id="sc-sec_party" onclick="clToggle(this);scSyncSections()">要／被保險人資料變更</label>
+            <label class="chk" id="sc-sec_party" onclick="clToggle(this);scSyncSections()">地址變更</label>
             <label class="chk" id="sc-sec_bene" onclick="clToggle(this);scSyncSections()">受益人資料變更</label>
             <label class="chk" id="sc-sec_card" onclick="clToggle(this);scSyncSections()">信用卡資料變更</label>
           </div>
           <div id="scNoSecHint" style="margin-top:10px;background:#fdf6f4;border:1px solid #f0c4bb;border-radius:10px;padding:11px 13px;font-size:12.5px;color:#a2564f;line-height:1.6">請先勾選上面至少一項，下面才會出現要填的欄位。</div>
 
           <!-- ① 要保人 ＋ ② 被保險人 -->
-          <div id="scPartyBlock" style="display:none">
-            <div class="grouplabel" style="margin-top:16px">① 要保人資料變更</div>
-            <div class="grid2">
-              <div class="field"><label>姓名</label><input id="sc_ph_name"></div>
-              <div class="field"><label>身分證字號／統一編號</label><input id="sc_ph_id"></div>
-            </div>
-            <div class="grouplabel" style="margin-top:10px">與被保險人關係</div>
-            <div class="checks">
-              <label class="chk" id="sc-phrel_self" onclick="scPickOne('phrel',this)">本人</label>
-              <label class="chk" id="sc-phrel_spouse" onclick="scPickOne('phrel',this)">配偶</label>
-              <label class="chk" id="sc-phrel_parent" onclick="scPickOne('phrel',this)">父母</label>
-              <label class="chk" id="sc-phrel_child" onclick="scPickOne('phrel',this)">子女</label>
-              <label class="chk" id="sc-phrel_other" onclick="scPickOne('phrel',this)">其他</label>
-            </div>
-            <div class="field" id="scPhRelOtherWrap" style="display:none;margin-top:8px"><label>其他關係說明</label><input id="sc_ph_rel_other"></div>
-            <div class="grouplabel" style="margin-top:10px">出生日期 <span class="hint">（民國年）</span></div>
-            <div class="grid5">
-              <div class="field"><label>年</label><input id="sc_ph_by" inputmode="numeric"></div>
-              <div class="field"><label>月</label><input id="sc_ph_bm" inputmode="numeric"></div>
-              <div class="field"><label>日</label><input id="sc_ph_bd" inputmode="numeric"></div>
-              <div class="field"><label>法人代表人</label><input id="sc_ph_legal_rep"></div>
-              <div></div>
-            </div>
-            <div class="grid2" style="margin-top:8px">
-              <div class="field"><label>戶籍地址 郵遞區號</label><input id="sc_ph_reg_zip" inputmode="numeric" maxlength="3"></div>
-              <div class="field"><label>戶籍地址</label><input id="sc_ph_reg_addr"></div>
-              <div class="field"><label>聯絡地址 郵遞區號</label><input id="sc_ph_con_zip" inputmode="numeric" maxlength="3"></div>
-              <div class="field"><label>聯絡地址</label><input id="sc_ph_con_addr"></div>
-            </div>
-            <div class="grid3" style="margin-top:8px">
-              <div class="field"><label>電話（住家）</label><input id="sc_ph_tel_home" inputmode="numeric"></div>
-              <div class="field"><label>電話（公司）</label><input id="sc_ph_tel_office" inputmode="numeric"></div>
-              <div class="field"><label>手機</label><input id="sc_ph_tel_mobile" inputmode="numeric"></div>
-            </div>
-
-            <div class="grouplabel" style="margin-top:16px">② 被保險人資料變更</div>
-            <div class="grid2">
-              <div class="field"><label>姓名</label><input id="sc_ia_name"></div>
-              <div class="field"><label>身分證字號</label><input id="sc_ia_id"></div>
-            </div>
-            <div class="grouplabel" style="margin-top:10px">出生日期 <span class="hint">（民國年）</span></div>
-            <div class="grid5">
-              <div class="field"><label>年</label><input id="sc_ia_by" inputmode="numeric"></div>
-              <div class="field"><label>月</label><input id="sc_ia_bm" inputmode="numeric"></div>
-              <div class="field"><label>日</label><input id="sc_ia_bd" inputmode="numeric"></div>
-              <div></div><div></div>
-            </div>
-            <div class="grid2" style="margin-top:8px">
-              <div class="field"><label>戶籍地址 郵遞區號</label><input id="sc_ia_reg_zip" inputmode="numeric" maxlength="3"></div>
-              <div class="field"><label>戶籍地址</label><input id="sc_ia_reg_addr"></div>
-              <div class="field"><label>聯絡地址 郵遞區號</label><input id="sc_ia_con_zip" inputmode="numeric" maxlength="3"></div>
-              <div class="field"><label>聯絡地址</label><input id="sc_ia_con_addr"></div>
-            </div>
-            <div class="grid3" style="margin-top:8px">
-              <div class="field"><label>電話（住家）</label><input id="sc_ia_tel_home" inputmode="numeric"></div>
-              <div class="field"><label>電話（公司）</label><input id="sc_ia_tel_office" inputmode="numeric"></div>
-              <div class="field"><label>手機</label><input id="sc_ia_tel_mobile" inputmode="numeric"></div>
-            </div>
-            <div class="grid3" style="margin-top:8px">
-              <div class="field"><label>服務機構</label><input id="sc_ia_employer"></div>
-              <div class="field"><label>職稱</label><input id="sc_ia_title"></div>
-              <div class="field"><label>工作內容</label><input id="sc_ia_job"></div>
-            </div>
-          </div>
+<div id="scPartyBlock" style="display:none"><div class="grouplabel" style="margin-top:16px">要保人新地址</div><div class="grid2"><div class="field"><label>戶籍地址郵遞區號（3 碼）</label><input id="sc_ph_reg_zip" inputmode="numeric" maxlength="3"></div><div class="field"><label>戶籍地址</label><input id="sc_ph_reg_addr"></div><div class="field"><label>聯絡地址郵遞區號（3 碼）</label><input id="sc_ph_con_zip" inputmode="numeric" maxlength="3"></div><div class="field"><label>聯絡地址</label><input id="sc_ph_con_addr"></div></div><div class="grouplabel" style="margin-top:16px">被保險人新地址</div><div class="grid2"><div class="field"><label>戶籍地址郵遞區號（3 碼）</label><input id="sc_ia_reg_zip" inputmode="numeric" maxlength="3"></div><div class="field"><label>戶籍地址</label><input id="sc_ia_reg_addr"></div><div class="field"><label>聯絡地址郵遞區號（3 碼）</label><input id="sc_ia_con_zip" inputmode="numeric" maxlength="3"></div><div class="field"><label>聯絡地址</label><input id="sc_ia_con_addr"></div></div><input id="sc_ph_name" type="hidden"><input id="sc_ph_id" type="hidden"><input id="sc_ph_rel_other" type="hidden"><input id="sc_ph_by" type="hidden"><input id="sc_ph_bm" type="hidden"><input id="sc_ph_bd" type="hidden"><input id="sc_ph_legal_rep" type="hidden"><input id="sc_ph_tel_home" type="hidden"><input id="sc_ph_tel_office" type="hidden"><input id="sc_ph_tel_mobile" type="hidden"><input id="sc_ia_name" type="hidden"><input id="sc_ia_id" type="hidden"><input id="sc_ia_by" type="hidden"><input id="sc_ia_bm" type="hidden"><input id="sc_ia_bd" type="hidden"><input id="sc_ia_tel_home" type="hidden"><input id="sc_ia_tel_office" type="hidden"><input id="sc_ia_tel_mobile" type="hidden"><input id="sc_ia_employer" type="hidden"><input id="sc_ia_title" type="hidden"><input id="sc_ia_job" type="hidden"></div>
 
           <!-- ③ 受益人 -->
           <div id="scBeneBlock" style="display:none">
@@ -2590,21 +2527,10 @@ function buildSouthChinaChange(){
   T('insured',gv('cl_ins_name')||gv('ins_name'));
   // ①要保人 ＋ ②被保險人
   if(isOn('sc-sec_party')){
-    T('ph_name',gv('sc_ph_name'));T('ph_id',gv('sc_ph_id'));
-    V('ph_rel_self',isOn('sc-phrel_self'));V('ph_rel_spouse',isOn('sc-phrel_spouse'));
-    V('ph_rel_parent',isOn('sc-phrel_parent'));V('ph_rel_child',isOn('sc-phrel_child'));
-    V('ph_rel_other',isOn('sc-phrel_other'));T('ph_rel_other_text',gv('sc_ph_rel_other'));
-    T('ph_birth_y',gv('sc_ph_by'));T('ph_birth_m',gv('sc_ph_bm'));T('ph_birth_d',gv('sc_ph_bd'));
-    T('ph_legal_rep',gv('sc_ph_legal_rep'));
     G('ph_reg_zip',gv('sc_ph_reg_zip'));T('ph_reg_addr',gv('sc_ph_reg_addr'));
     G('ph_con_zip',gv('sc_ph_con_zip'));T('ph_con_addr',gv('sc_ph_con_addr'));
-    T('ph_tel_home',gv('sc_ph_tel_home'));T('ph_tel_office',gv('sc_ph_tel_office'));T('ph_tel_mobile',gv('sc_ph_tel_mobile'));
-    T('ia_name',gv('sc_ia_name'));T('ia_id',gv('sc_ia_id'));
-    T('ia_birth_y',gv('sc_ia_by'));T('ia_birth_m',gv('sc_ia_bm'));T('ia_birth_d',gv('sc_ia_bd'));
     G('ia_reg_zip',gv('sc_ia_reg_zip'));T('ia_reg_addr',gv('sc_ia_reg_addr'));
     G('ia_con_zip',gv('sc_ia_con_zip'));T('ia_con_addr',gv('sc_ia_con_addr'));
-    T('ia_tel_home',gv('sc_ia_tel_home'));T('ia_tel_office',gv('sc_ia_tel_office'));T('ia_tel_mobile',gv('sc_ia_tel_mobile'));
-    T('ia_employer',gv('sc_ia_employer'));T('ia_title',gv('sc_ia_title'));T('ia_job_desc',gv('sc_ia_job'));
   }
   // ③受益人
   if(isOn('sc-sec_bene')){
@@ -4711,7 +4637,7 @@ function validateRequired(){
       return m;
     }
 
-    if(!isOn('sc-sec_party')&&!isOn('sc-sec_bene')&&!isOn('sc-sec_card'))m.push('尚未勾選要變更的項目（要／被保險人・受益人・信用卡）');
+    if(!isOn('sc-sec_party')&&!isOn('sc-sec_bene')&&!isOn('sc-sec_card'))m.push('尚未勾選要變更的項目（地址・受益人・信用卡）');
     if(isOn('sc-sec_card')){
       if(!gv('sc_card_no'))m.push('信用卡卡號尚未填寫');
       if(!isOn('sc-card_visa')&&!isOn('sc-card_master')&&!isOn('sc-card_jcb'))m.push('信用卡卡別尚未勾選');

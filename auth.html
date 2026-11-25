@@ -74,7 +74,7 @@
     <button onclick="if(history.length>1){history.back()}else{location.href='index.html'}" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--teal-deep);font-family:inherit;margin-bottom:10px">← 返回上一頁</button>
     <button onclick="clearDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#b56b3d;font-family:inherit;margin-bottom:10px;margin-left:8px">🗑 清除重填</button>
     <button onclick="restoreDraft()" style="background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:14px;cursor:pointer;color:#245A5E;font-family:inherit;margin-bottom:10px;margin-left:8px">↩ 復原上次</button>
-    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641i</span></h1>
+    <h1>信用卡付款授權書 · 填寫 <span style="font-size:12px;color:#b56b3d;font-weight:400">v0641j</span></h1>
   </div>
   <p class="sub">先選文件類別，再搜尋客戶保單與選擇保險公司</p>
 
@@ -1398,8 +1398,7 @@
         <div class="card" id="scChangeFields" style="display:none">
           <div class="field"><label for="sc_pre_version">華南產險表單版本</label>
             <select id="sc_pre_version" onchange="scSyncSections()">
-              <option value="pre">新契約承保前內容變更（113.11）</option>
-              <option value="legacy">原契約內容變更申請書</option>
+              <option value="legacy">保險契約內容變更申請書（健康及傷害險專用）115.04</option>
             </select>
           </div>
           <div id="scPreHeader" class="field"><label for="sc_pre_application">要保號碼</label><input type="text" id="sc_pre_application" placeholder="請填新契約要保號碼"></div>
@@ -2533,7 +2532,7 @@ function scCardDigits(){
   return [v.slice(0,4),v.slice(4,8),v.slice(8,12),v.slice(12,16)];
 }
 function scUsesPreChange(){
-  return gv('sc_pre_version')==='pre';
+  return false; // 華南固定使用使用者提供的正式契約變更書 115.04
 }
 function scPreAddress(role,kind,field){
   return gv('sc_pre_'+role+'_'+kind+'_'+field);
@@ -4230,7 +4229,7 @@ const FORMS={
   globallife_change:{doc:'契約變更',key:'globallife_change', label:'全球人壽', sub:'個人資料異動申請書（115.10）', build:buildGloballifeChange, pages:[0], pay:['*']},
   shinkong_change:{doc:'契約變更',key:'bene_sk', label:'新光人壽', sub:'聯絡資料變更', build:buildShinkongChange, pages:[0], pay:['*']},
   southchina_pre:{doc:'契約變更',key:'southchina_pre',label:'華南產險',sub:'新契約承保前內容變更申請書 113.11',build:buildSouthChinaPreChange,pages:[0],pay:['*']},
-  southchina_change:{doc:'契約變更',key:'southchina_change', label:'華南產險', sub:'契約內容變更申請書', build:buildSouthChinaChange, pages:[0], pay:['*']},
+  southchina_change:{doc:'契約變更',key:'southchina_change', label:'華南產險', sub:'契約內容變更申請書11504', build:buildSouthChinaChange, pages:[0,1], pay:['*']},
   farglory_claim:{doc:'理賠申請',key:'farglory_claim', label:'遠雄人壽', sub:'保險金申請書', build:buildFarglolyClaim, pages:[0], pay:['*']},
   tmnewa_claim:{doc:'理賠申請',key:'tmnewa_claim', label:'新安東京海上', sub:'理賠申請書', build:buildTmnewaClaim, pages:[0], pay:['*']},
   hontai_claim:{doc:'理賠申請',key:'hontai_claim', label:'宏泰人壽', sub:'理賠申請書', build:buildHontaiClaim, pages:[0], pay:['*']},
